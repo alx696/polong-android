@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="red.lilu.app">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 维持后台运行 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- 其它 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-feature android:name="android.hardware.camera.any" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application
+        android:name="red.lilu.app.MyApplication"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/MyTheme">
+
+        <!-- 解决7.0中通过URI访问文件会出现FileUriExposedException问题 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <!-- 注意:在res/xml下添加provider_paths.xml并设置 -->
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+        <service
+            android:name="red.lilu.app.FService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- single启动模式时,如果已经创建则需在onNewIntent()中获取Intent,如果未曾创建则需在onCreate()中获取. -->
+        <activity
+            android:name="red.lilu.app.ActivityMain"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="red.lilu.app.ActivityAbout"
+            android:theme="@style/MyTheme.Dialog" />
+        <activity
+            android:name="red.lilu.app.ActivityAlert"
+            android:theme="@style/MyTheme.Dialog" />
+        <activity
+            android:name="red.lilu.app.ActivityInfoForm"
+            android:theme="@style/MyTheme.Dialog" />
+        <activity
+            android:name="red.lilu.app.ActivityEditText"
+            android:windowSoftInputMode="stateAlwaysVisible" />
+        <activity
+            android:name="red.lilu.app.ActivityOption"
+            android:parentActivityName="red.lilu.app.ActivityMain" />
+        <activity
+            android:name="red.lilu.app.ActivityAdd"
+            android:parentActivityName="red.lilu.app.ActivityMain" />
+        <activity
+            android:name="red.lilu.app.ActivityQrCode"
+            android:parentActivityName="red.lilu.app.ActivityAdd" />
+        <activity
+            android:name="red.lilu.app.ActivityChat"
+            android:parentActivityName="red.lilu.app.ActivityMain" />
+        <activity
+            android:name="red.lilu.app.ActivityTargetInfo"
+            android:parentActivityName="red.lilu.app.ActivityChat" />
+    </application>
+
+</manifest>
