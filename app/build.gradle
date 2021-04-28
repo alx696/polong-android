@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 30
     defaultConfig {
-        applicationId "red.lilu.app.pl"
+        applicationId "red.lilu.app.polong"
         minSdkVersion 28
         targetSdkVersion 28
         versionCode 100
@@ -21,7 +21,7 @@ android {
             android.applicationVariants.all {
                 variant ->
                     variant.outputs.all {
-                        outputFileName = "pl-${versionCode}.apk"
+                        outputFileName = "polong-${versionCode}.apk"
                     }
             }
         }
