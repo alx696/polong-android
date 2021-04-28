@@ -9,6 +9,22 @@ android {
         versionCode 100
         versionName '1.0.0'
     }
+    def KeyPassword = System.getenv('ANDROID_KEY_PASSWORD')
+    if (KeyPassword == null) {
+        KeyPassword = '123456'
+    }
+    def StorePassword = System.getenv('ANDROID_STORE_PASSWORD')
+    if (StorePassword == null) {
+        StorePassword = '123456'
+    }
+    signingConfigs {
+        lilu {
+            keyAlias 'lilu.red' // 仅在开发时使用
+            keyPassword "$KeyPassword"
+            storeFile file('lilu.red.jks')
+            storePassword "$StorePassword"
+        }
+    }
     buildFeatures {
         viewBinding = true
     }
@@ -16,6 +32,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.lilu
             // 定义输出文件名称
             // https://stackoverflow.com/a/55332662/4879713
             android.applicationVariants.all {
@@ -24,6 +41,9 @@ android {
                         outputFileName = "polong-${versionCode}.apk"
                     }
             }
+        }
+        debug {
+            signingConfig signingConfigs.lilu
         }
     }
     compileOptions {
