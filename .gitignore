@@ -2,6 +2,7 @@
 .gradle
 .idea
 local.properties
+build
 app/build
 gomobile/build
 gomobile/*.aar
