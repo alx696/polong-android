@@ -24,9 +24,6 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
       - name: Prepare SSH
         env:
           # ED25519 Private Key
@@ -43,29 +40,19 @@ jobs:
           scp $SCP_PATH_JKS app/lilu.red.jks
           scp $SCP_PATH_AAR gomobile/
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Build with Gradle
+      - name: Build all artifacts
         env:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew build
+        id: buildAllApks
+        uses: eskatos/gradle-command-action@v1.3.3
+        with:
+          gradle-version: current
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+          arguments: assembleRelease
 
-      - name: Cleanup Gradle Cache
-        # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
-        # Restoring these files from a GitHub Actions cache might cause problems for future builds.
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties
-        
       - name: Publish
         env:
           SCP_PATH_APK: ${{ secrets.SCP_PATH_APK }}
