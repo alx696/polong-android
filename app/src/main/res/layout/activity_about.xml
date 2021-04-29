@@ -31,6 +31,13 @@
         tools:text="https://lilu.red" />
 
     <TextView
+        style="@style/TextAppearance.AppCompat.Body2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="已经开源，欢迎参与贡献！" />
+
+    <TextView
         android:id="@+id/text_version"
         style="@style/TextAppearance.AppCompat.Body1"
         android:layout_width="match_parent"
