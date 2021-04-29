@@ -1,40 +1,27 @@
 name: CI
 
 on:
-#  push:
-#    branches: [ main ]
-
-#   release:
-#     types: [published]
-
   push:
     tags:
       - 'v*'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
+    env:
+      # https://github.com/alx696/polong-core/releases
+      POLONG_CORE_VERSION: v1.0.0
+
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-
-      - name: Prepare SSH
+      - name: Prepare SSH and Get File
         env:
           # ED25519 Private Key
           SCP_PK: ${{ secrets.SCP_PK }}
           SCP_PATH_JKS: ${{ secrets.SCP_PATH_JKS }}
-          SCP_PATH_AAR: ${{ secrets.SCP_PATH_AAR }}
         run: |
           mkdir -p $HOME/.ssh
           echo "$SCP_PK" | tee $HOME/.ssh/id_ed25519
@@ -43,7 +30,15 @@ jobs:
             StrictHostKeyChecking no
             UserKnownHostsFile=/dev/null" | tee $HOME/.ssh/config
           scp $SCP_PATH_JKS app/lilu.red.jks
-          scp $SCP_PATH_AAR gomobile/
+          rm $HOME/.ssh/id_ed25519
+          sudo apt install -y wget
+          wget https://github.com/alx696/polong-core/releases/download/${POLONG_CORE_VERSION}/polong-core.aar -O gomobile/polong-core.aar
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
 
       - name: Build
         env:
@@ -64,9 +59,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           files: 'app/build/outputs/apk/release/*.apk'
-
-      - name: Publish
-        env:
-          SCP_PATH_APK: ${{ secrets.SCP_PATH_APK }}
-        run: |
-          scp app/build/outputs/apk/release/*.apk $SCP_PATH_APK
