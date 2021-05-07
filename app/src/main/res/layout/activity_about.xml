@@ -35,7 +35,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="已经开源，欢迎参与贡献！" />
+        android:autoLink="all"
+        android:text="已在GitHub开源，欢迎参与开发^^ https://github.com/alx696/polong-android" />
 
     <TextView
         android:id="@+id/text_version"

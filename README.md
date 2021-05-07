@@ -4,7 +4,7 @@
 
 ## 开发
 
-首先到`gomobile`中按照说明获取aar，然后使用Android Studio打开项目。
+首先到项目下的`gomobile`文件夹中按照说明获取aar，然后使用Android Studio打开项目。
 
 ### 注意
 
