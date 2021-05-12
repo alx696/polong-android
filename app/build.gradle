@@ -4,7 +4,7 @@ android {
     compileSdkVersion 30
     defaultConfig {
         applicationId "red.lilu.app.polong"
-        minSdkVersion 28
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode 100
         versionName '1.0.0'

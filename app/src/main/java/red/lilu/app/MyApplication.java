@@ -1,9 +1,11 @@
 package red.lilu.app;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.database.Cursor;
@@ -19,6 +21,8 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Range;
 import android.util.Size;
@@ -53,6 +57,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -156,6 +161,65 @@ public class MyApplication extends Application implements CameraXConfig.Provider
             Log.w(T, "获取包信息失败");
         }
         return null;
+    }
+
+    /**
+     * 指定无障碍服务是否开启
+     *
+     * @param fullClassName 例如 AccessibilityServiceRemoteControl.class.getName()
+     * @return 是否
+     */
+    public boolean isAccessibilitySettingsOn(String fullClassName) {
+        final String service = getPackageName() + "/" + fullClassName;
+
+        try {
+            int accessibilityEnabled = Settings.Secure.getInt(
+                    getContentResolver(),
+                    Settings.Secure.ACCESSIBILITY_ENABLED
+            );
+//            Log.d(T, "无障碍服务是否开启设置：" + accessibilityEnabled);
+
+            String enabledServices = Settings.Secure.getString(
+                    getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            );
+            if (enabledServices != null) {
+                TextUtils.SimpleStringSplitter simpleStringSplitter = new TextUtils.SimpleStringSplitter(':');
+                simpleStringSplitter.setString(enabledServices);
+                while (simpleStringSplitter.hasNext()) {
+                    String accessabilityService = simpleStringSplitter.next();
+//                    Log.d(T, "已经开启的无障碍服务：" + accessabilityService);
+
+                    if (accessabilityService.equalsIgnoreCase(service)) {
+                        return true;
+                    }
+                }
+            } else {
+                Log.w(T, "没有找到已经开启的无障碍服务设置");
+            }
+        } catch (Settings.SettingNotFoundException e) {
+            Log.w(T, "没有找到无障碍服务设置: " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * 指定服务是否运行
+     *
+     * @param fullClassName 例如 String.class.getName()
+     * @return 是否
+     */
+    public boolean isServiceRunning(String fullClassName) {
+        boolean isRunning = false;
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
+        for (ActivityManager.RunningServiceInfo rsi : runningServices) {
+            if (rsi.service.getClassName().equals(fullClassName)) {
+                isRunning = true;
+            }
+        }
+        return isRunning;
     }
 
     private static class DNSResponseAnswer {

@@ -11,10 +11,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -49,6 +56,8 @@ public class FService extends Service implements kc.FeedCallback {
     private final LinkedHashMap<Person, Notification.MessagingStyle.Message> notificationMessageMap = new LinkedHashMap<>();
     private boolean mainUiShow = true; //主界面是否显示
     private String chatTargetID = ""; //会话界面对方ID
+    private WindowManager windowManager; // 用于显示悬浮窗口
+    private ViewGroup floatWindowView; // 用于显示悬浮窗口
 
     public FService() {
     }
@@ -190,6 +199,10 @@ public class FService extends Service implements kc.FeedCallback {
             wakeLock.release();
             wakeLock = null;
         }
+
+        if (floatWindowView != null) {
+            windowManager.removeView(floatWindowView);
+        }
     }
 
     @Override
@@ -246,6 +259,13 @@ public class FService extends Service implements kc.FeedCallback {
         broadcastManager.sendBroadcast(pushIntent);
 
         showChatMessageNotification(peerID, json);
+
+        Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlTaskDo.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(
+//                getApplicationContext(), 0, intent, PendingIntent.FLAG_CANCEL_CURRENT
+//        );
+        startActivity(intent);
     }
 
     @Override
@@ -389,6 +409,80 @@ public class FService extends Service implements kc.FeedCallback {
                     .build();
             notificationManager.notify(NOTIFICATION_MESSAGE_ID_OLD, notification);
         }
+    }
+
+    /**
+     * 显示悬浮窗口
+     * 参考 https://www.geeksforgeeks.org/how-to-make-a-floating-window-application-in-android/
+     */
+    private void showFloatWindow() {
+        if (!Settings.canDrawOverlays(getApplicationContext())) {
+            Log.w(T, "没有显示悬浮窗口权限");
+            return;
+        }
+
+        // The screen height and width are calculated, cause
+        // the height and width of the floating window is set depending on this
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        int width = metrics.widthPixels;
+        int height = metrics.heightPixels;
+        Log.w(T, String.format("宽高: %d, %d", width, height));
+
+        // To obtain a WindowManager of a different Display,
+        // we need a Context for that display, so WINDOW_SERVICE is used
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        // A LayoutInflater instance is created to retrieve the
+        // LayoutInflater for the floating_layout xml
+        LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
+
+        // inflate a new view hierarchy from the floating_layout xml
+        floatWindowView = (ViewGroup) inflater.inflate(R.layout.float_window_remote_control_task_do, null);
+
+        int layoutType;
+        // WindowManager.LayoutParams takes a lot of parameters to set the
+        // the parameters of the layout. One of them is Layout_type.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // If API Level is more than 26, we need TYPE_APPLICATION_OVERLAY
+            layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            // If API Level is lesser than 26, then we can
+            // use TYPE_SYSTEM_ERROR,
+            // TYPE_SYSTEM_OVERLAY, TYPE_PHONE, TYPE_PRIORITY_PHONE.
+            // But these are all
+            // deprecated in API 26 and later. Here TYPE_TOAST works best.
+            // 小米4c不支持TYPE_TOAST
+            layoutType = WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
+        }
+
+        // Now the Parameter of the floating-window layout is set.
+        // 1) The Width of the window will be 55% of the phone width.
+        // 2) The Height of the window will be 58% of the phone height.
+        // 3) Layout_Type is already set.
+        // 4) Next Parameter is Window_Flag. Here FLAG_NOT_FOCUSABLE is used. But
+        // problem with this flag is key inputs can't be given to the EditText.
+        // This problem is solved later.
+        // 5) Next parameter is Layout_Format. System chooses a format that supports
+        // translucency by PixelFormat.TRANSLUCENT
+        WindowManager.LayoutParams floatWindowLayoutParam = new WindowManager.LayoutParams(
+                (int) (width * (0.6f)),
+                WindowManager.LayoutParams.WRAP_CONTENT, // (int) (height * (0.58f))
+                layoutType,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT
+        );
+
+        // The Gravity of the Floating Window is set.
+        // The Window will appear in the center of the screen
+        floatWindowLayoutParam.gravity = Gravity.CENTER;
+
+        // X and Y value of the window is set
+        floatWindowLayoutParam.x = 0;
+        floatWindowLayoutParam.y = 0;
+
+        // The ViewGroup that inflates the floating_layout.xml is
+        // added to the WindowManager with all the parameters
+        windowManager.addView(floatWindowView, floatWindowLayoutParam);
     }
 
 }

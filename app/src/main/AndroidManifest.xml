@@ -10,10 +10,13 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- 其它 -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+
     <uses-feature android:name="android.hardware.camera.any" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -38,9 +41,23 @@
         </provider>
 
         <service
-            android:name="red.lilu.app.FService"
+            android:name=".FService"
             android:enabled="true"
             android:exported="false" />
+
+        <service
+            android:name=".AccessibilityServiceRemoteControl"
+            android:enabled="true"
+            android:label="远程控制"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_remote_control" />
+        </service>
 
         <!-- single启动模式时,如果已经创建则需在onNewIntent()中获取Intent,如果未曾创建则需在onCreate()中获取. -->
         <activity
@@ -64,6 +81,10 @@
         <activity
             android:name="red.lilu.app.ActivityEditText"
             android:windowSoftInputMode="stateAlwaysVisible" />
+        <activity android:name=".ActivityRemoteControlTaskDo" />
+        <activity
+            android:name="red.lilu.app.ActivityRemoteControlOption"
+            android:parentActivityName="red.lilu.app.ActivityMain" />
         <activity
             android:name="red.lilu.app.ActivityOption"
             android:parentActivityName="red.lilu.app.ActivityMain" />

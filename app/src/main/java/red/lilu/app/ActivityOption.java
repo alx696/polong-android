@@ -156,6 +156,10 @@ public class ActivityOption extends AppCompatActivity {
                 );
             }
         });
+
+        b.buttonRemoteControl.setOnClickListener(v -> {
+            startActivity(new Intent(getApplicationContext(), ActivityRemoteControlOption.class));
+        });
     }
 
     @Override
