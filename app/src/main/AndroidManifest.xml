@@ -40,6 +40,8 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
+        <service android:name=".ServiceSystemAlertWindow" />
+
         <service
             android:name=".FService"
             android:enabled="true"

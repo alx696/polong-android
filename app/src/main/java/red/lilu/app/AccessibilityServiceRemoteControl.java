@@ -3,13 +3,18 @@ package red.lilu.app;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.app.Notification;
+import android.content.Intent;
 import android.graphics.Path;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,6 +22,7 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
 
     private static final String T = "调试";
     private Timer timer;
+    private int count;
 
     /**
      * 点击坐标
@@ -43,20 +49,6 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
         );
     }
 
-    private void delayClick(String name, float x, float y, long delay) {
-        Log.d(T, "准备延时点击:" + name);
-        timer.schedule(
-                new TimerTask() {
-                    @Override
-                    public void run() {
-                        Log.d(T, "进行延时点击:" + name);
-                        click(x, y);
-                    }
-                },
-                delay
-        );
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -78,7 +70,7 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
             if (event.getClassName() != null) {
                 className = event.getClassName().toString();
             }
-            Log.d(T, String.format("无障碍服务onAccessibilityEvent：%s, %s, %s", eventName, packageName, className));
+//            Log.d(T, String.format("无障碍服务onAccessibilityEvent：%s, %s, %s", eventName, packageName, className));
 
             // 获取通知内容（小米4C不支持）
             if (packageName.equals("red.lilu.app.polong")
@@ -96,9 +88,24 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
                 }
             }
 
+            // 破笼远程任务
             if (packageName.equals("red.lilu.app.polong")
                     && className.equals("red.lilu.app.ActivityRemoteControlTaskDo")) {
-                Log.w(T, "执行远程任务");
+                Log.d(T, "执行破笼远程任务");
+
+                // 提取任务内容然后执行
+                AccessibilityNodeInfo rootNodeInfo = getRootInActiveWindow();
+                if (rootNodeInfo != null) {
+                    List<AccessibilityNodeInfo> nodeInfoList = rootNodeInfo.findAccessibilityNodeInfosByViewId("red.lilu.app.polong:id/text_task");
+//                    Log.d(T, "找到元素数量:" + nodeInfoList.size());
+
+                    if (nodeInfoList.size() > 0) {
+                        AccessibilityNodeInfo taskNodeInfo = nodeInfoList.get(0);
+                        String json = taskNodeInfo.getText().toString();
+                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+                        doTask(json);
+                    }
+                }
             }
         } catch (Exception e) {
             Log.w(T, e);
@@ -123,7 +130,7 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
         }
     }
 
-    private void dingding() {
+    /*private void dingding() {
         // 应用图标 140,1660
         // 工作台 525,1810
         // 考勤打卡 126,960
@@ -158,6 +165,51 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
                 performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
             }
         }, timeline);
+    }*/
+
+    private void doTask(String json) {
+        Log.i(T, "执行任务:" + json);
+
+        // 解析任务
+        ArrayList<Task> tasks = new Gson().fromJson(
+                json,
+                new TypeToken<ArrayList<Task>>() {
+                }.getType());
+
+        // 显示浮动窗口进行提示
+        Intent intentServiceSystemAlertWindow = new Intent(getApplicationContext(), ServiceSystemAlertWindow.class);
+        intentServiceSystemAlertWindow.putExtra("name", "打卡");
+        startService(intentServiceSystemAlertWindow);
+
+        // 进到首页
+        performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+
+        long timeline = 0;
+        count = 0;
+        for (Task task : tasks) {
+            timeline += task.wait;
+
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Log.d(T, "延时点击:" + task.name);
+
+                    if (task.name.equals("[back]")) {
+                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+                    } else {
+                        click(task.x, task.y);
+                    }
+
+                    count++;
+                    if (count == tasks.size()) {
+                        Log.d(T, "执行完毕");
+
+                        // 关闭浮动窗口
+                        stopService(intentServiceSystemAlertWindow);
+                    }
+                }
+            }, timeline);
+        }
     }
 
 }
