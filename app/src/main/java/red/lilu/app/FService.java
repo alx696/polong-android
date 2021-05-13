@@ -1,5 +1,6 @@
 package red.lilu.app;
 
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -20,7 +21,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
@@ -40,6 +40,7 @@ public class FService extends Service implements kc.FeedCallback {
     public static final int NOTIFICATION_MESSAGE_ID = 2;
     public static final int NOTIFICATION_MESSAGE_ID_OLD = 3;
     private MyApplication application;
+    private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
     private NotificationManager notificationManager;
     private PendingIntent mainActivityPendingIntent;
@@ -52,6 +53,7 @@ public class FService extends Service implements kc.FeedCallback {
     private final LinkedHashMap<Person, Notification.MessagingStyle.Message> notificationMessageMap = new LinkedHashMap<>();
     private boolean mainUiShow = true; //主界面是否显示
     private String chatTargetID = ""; //会话界面对方ID
+    private KeyguardManager keyguardManager;
 
     public FService() {
     }
@@ -110,11 +112,12 @@ public class FService extends Service implements kc.FeedCallback {
 
         //唤醒(对一加手机有效, 否则后台状态就冻结了.)
         // https://developer.android.com/training/scheduling/wakelock#cpu
-        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (powerManager != null) {
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "iim:wakelock");
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, getPackageName() + ":wakelock");
             wakeLock.acquire();
         }
+        keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
 
         broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastReceiver = new LocalBroadcastReceiver();
@@ -269,25 +272,7 @@ public class FService extends Service implements kc.FeedCallback {
 
         showChatMessageNotification(peerID, chatMessage);
 
-        //---
-
-        // 执行打卡任务
-        if (chatMessage.text.equals("daka")) {
-            ArrayList<Task> tasks = Lists.newArrayList(
-                    new Task("点击应用图标", 170F, 1765F, 3000),
-                    new Task("点击工作台", 530F, 1800F, 10000),
-                    new Task("点击考勤打卡", 130F, 1010F, 9000),
-                    new Task("点击打卡按钮", 530F, 1070F, 12000),
-                    new Task("[back]", 0F, 0F, 6000),
-                    new Task("[back]", 0F, 0F, 3000)
-            );
-            String taskJson = new Gson().toJson(tasks);
-
-            Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlTaskDo.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            intent.putExtra("json", taskJson);
-            startActivity(intent);
-        }
+        handleRemoteTask(chatMessage);
     }
 
     @Override
@@ -424,6 +409,77 @@ public class FService extends Service implements kc.FeedCallback {
                     .build();
             notificationManager.notify(NOTIFICATION_MESSAGE_ID_OLD, notification);
         }
+    }
+
+    private void handleRemoteTask(KcAPI.ChatMessage chatMessage) {
+        if (!chatMessage.text.equals("daka")) {
+            return;
+        }
+
+        // 检查是否加密锁定
+        if (keyguardManager != null && keyguardManager.isKeyguardLocked()) {
+            Log.w(T, "解锁需要密码, 无法执行远程任务");
+
+            // 自动回复问题
+            KcAPI.sendChatMessageText(
+                    chatMessage.fromPeerID,
+                    "注意：设备已经锁屏且设置解锁密码，无法执行远程任务！",
+                    application,
+                    text -> {
+                        Log.w(T, "自动回复失败：" + text);
+                    },
+                    text -> {
+                        Log.d(T, "自动回复成功: 无法执行远程任务");
+                    }
+            );
+
+//                Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlTaskDo.class);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//                intent.putExtra("json", "[]");
+//                startActivity(intent);
+            return;
+        }
+
+        // 锁屏状态自动亮屏
+        if (powerManager != null && !powerManager.isInteractive()) {
+            Log.d(T, "设备处于锁屏状态");
+
+            // 亮屏
+            PowerManager.WakeLock unlockWakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                    getPackageName() + ":wakelock:wakeup"
+            );
+            unlockWakeLock.acquire();
+            unlockWakeLock.release();
+        }
+
+        // 执行测试一加计算器任务
+        ArrayList<Task> tasks = Lists.newArrayList(
+                new Task("点击应用图标", 400F, 1300F, 3000),
+                new Task("点击1", 180F, 1460F, 3000),
+                new Task("点击+", 870F, 1550F, 1000),
+                new Task("点击2", 400F, 1450F, 1000),
+                new Task("点击=", 880F, 1790F, 1000),
+                new Task("[back]", 0F, 0F, 6000)
+        );
+        // 执行打卡任务
+//        ArrayList<Task> tasks = Lists.newArrayList(
+//                new Task("点击应用图标", 170F, 1765F, 3000),
+//                new Task("点击工作台", 530F, 1800F, 10000),
+//                new Task("点击考勤打卡", 130F, 1010F, 9000),
+//                new Task("点击打卡按钮", 530F, 1070F, 12000),
+//                new Task("[back]", 0F, 0F, 6000),
+//                new Task("[back]", 0F, 0F, 3000)
+//        );
+        String taskJson = application.getGson().toJson(tasks);
+
+        Log.d(T, "显示触发远程任务窗口");
+        Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlTaskDo.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("json", taskJson);
+        startActivity(intent);
+        //-
     }
 
 }

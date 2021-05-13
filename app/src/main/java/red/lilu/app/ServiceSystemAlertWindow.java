@@ -24,7 +24,7 @@ public class ServiceSystemAlertWindow extends Service {
     private static final String T = "调试";
     private WindowManager windowManager;
     private ViewGroup windowView;
-    private TextView taskTextView;
+    private TextView textViewTitle, textViewContent;
 
     @Nullable
     @Override
@@ -50,9 +50,10 @@ public class ServiceSystemAlertWindow extends Service {
         LayoutInflater inflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
 
         // inflate a new view hierarchy from the floating_layout xml
-        windowView = (ViewGroup) inflater.inflate(R.layout.float_window_remote_control_task_do, null);
-        // find view and set text
-        taskTextView = windowView.findViewById(R.id.text_task);
+        windowView = (ViewGroup) inflater.inflate(R.layout.system_alert_window, null);
+        // find view
+        textViewTitle = windowView.findViewById(R.id.text_title);
+        textViewContent = windowView.findViewById(R.id.text_content);
 
         int layoutType;
         // WindowManager.LayoutParams takes a lot of parameters to set the
@@ -108,8 +109,12 @@ public class ServiceSystemAlertWindow extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String name = intent.getStringExtra("name");
-        taskTextView.setText(name);
+        textViewTitle.setText(
+                intent.getStringExtra("title")
+        );
+        textViewContent.setText(
+                intent.getStringExtra("content")
+        );
 
         return super.onStartCommand(intent, flags, startId);
     }

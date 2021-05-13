@@ -48,7 +48,7 @@
             android:exported="false" />
 
         <service
-            android:name=".AccessibilityServiceRemoteControl"
+            android:name=".ServiceAccessibilityRemoteControl"
             android:enabled="true"
             android:label="远程控制"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

@@ -35,7 +35,7 @@ public class ActivityRemoteControlOption extends AppCompatActivity {
         super.onResume();
 
         // 检测辅助服务是否正在运行
-        boolean accessibilitySettingsOn = application.isAccessibilitySettingsOn(AccessibilityServiceRemoteControl.class.getName());
+        boolean accessibilitySettingsOn = application.isAccessibilitySettingsOn(ServiceAccessibilityRemoteControl.class.getName());
         Log.d(T, "无障碍服务是否已经开启:" + accessibilitySettingsOn);
         b.switchEnable.setChecked(accessibilitySettingsOn);
         b.switchEnable.setText(accessibilitySettingsOn ? "启用" : "停用");

@@ -5,7 +5,6 @@ import android.accessibilityservice.GestureDescription;
 import android.app.Notification;
 import android.content.Intent;
 import android.graphics.Path;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class AccessibilityServiceRemoteControl extends AccessibilityService {
+public class ServiceAccessibilityRemoteControl extends AccessibilityService {
 
     private static final String T = "调试";
     private Timer timer;
@@ -62,15 +61,15 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
             String eventName = AccessibilityEvent.eventTypeToString(event.getEventType());
             String packageName = "";
             String className = "";
-            // 一加3T在TYPE_WINDOW_STATE_CHANGED时没有
+            // 一加3T只有对应应用处于可见状态才能获取
             if (event.getPackageName() != null) {
                 packageName = event.getPackageName().toString();
             }
-            // 一加3T在TYPE_WINDOW_STATE_CHANGED时没有
+            // 一加3T只有对应应用处于可见状态才能获取
             if (event.getClassName() != null) {
                 className = event.getClassName().toString();
             }
-//            Log.d(T, String.format("无障碍服务onAccessibilityEvent：%s, %s, %s", eventName, packageName, className));
+            Log.d(T, String.format("无障碍服务onAccessibilityEvent：%s, %s, %s", eventName, packageName, className));
 
             // 获取通知内容（小米4C不支持）
             if (packageName.equals("red.lilu.app.polong")
@@ -102,7 +101,7 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
                     if (nodeInfoList.size() > 0) {
                         AccessibilityNodeInfo taskNodeInfo = nodeInfoList.get(0);
                         String json = taskNodeInfo.getText().toString();
-                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+//                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
                         doTask(json);
                     }
                 }
@@ -178,7 +177,8 @@ public class AccessibilityServiceRemoteControl extends AccessibilityService {
 
         // 显示浮动窗口进行提示
         Intent intentServiceSystemAlertWindow = new Intent(getApplicationContext(), ServiceSystemAlertWindow.class);
-        intentServiceSystemAlertWindow.putExtra("name", "打卡");
+        intentServiceSystemAlertWindow.putExtra("title", "打卡");
+        intentServiceSystemAlertWindow.putExtra("content", json);
         startService(intentServiceSystemAlertWindow);
 
         // 进到首页
