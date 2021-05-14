@@ -204,7 +204,7 @@ public class FService extends Service implements kc.FeedCallback {
 
         Intent pushIntent = new Intent("push");
         pushIntent.putExtra("type", "ContactDelete");
-        pushIntent.putExtra("data", id);
+        pushIntent.putExtra("id", id);
         broadcastManager.sendBroadcast(pushIntent);
     }
 

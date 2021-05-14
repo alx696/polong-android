@@ -3,16 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/blacklist"
-        android:icon="@drawable/ic_dangerous"
-        android:title="删除"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/delete"
-        android:icon="@drawable/ic_person_remove"
-        android:title="删除"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/clear"
         android:icon="@drawable/ic_delete_sweep"
         android:title="清空"

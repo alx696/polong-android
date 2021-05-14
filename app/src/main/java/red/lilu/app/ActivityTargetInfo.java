@@ -5,14 +5,19 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 
@@ -42,8 +47,8 @@ public class ActivityTargetInfo extends AppCompatActivity {
         application = (MyApplication) getApplication();
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
-        qrcodePath = getExternalCacheDir() + "/qrcode.jpg";
         id = getIntent().getStringExtra("id");
+        qrcodePath = getExternalCacheDir() + "/qrcode.jpg";
         KcAPI.getContact(
                 application,
                 error -> {
@@ -94,6 +99,66 @@ public class ActivityTargetInfo extends AppCompatActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    private void deleteContact() {
+        KcAPI.delContact(
+                id,
+                application,
+                error -> {
+                    runOnUiThread(() -> {
+                        Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                    });
+                },
+                result -> {
+                    runOnUiThread(this::finish);
+                }
+        );
+    }
+
+    /**
+     * 删除联系人
+     */
+    public void contactDelete(View view) {
+        Snackbar.make(b.getRoot(), "确定要这样?", BaseTransientBottomBar.LENGTH_SHORT)
+                .setAction("删除", v -> {
+                    deleteContact();
+                })
+                .show();
+    }
+
+    /**
+     * 拉黑联系人
+     */
+    public void contactBlacklist(View view) {
+        Snackbar.make(b.getRoot(), "确定要这样?", BaseTransientBottomBar.LENGTH_SHORT)
+                .setAction("加黑名单", v -> {
+                    KcAPI.getOption(
+                            application,
+                            error -> {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                                });
+                            },
+                            option -> {
+                                option.blacklist_id_array.add(id);
+
+                                //
+                                KcAPI.setOptionBlacklistID(
+                                        TextUtils.join(",", option.blacklist_id_array),
+                                        application,
+                                        error -> {
+                                            runOnUiThread(() -> {
+                                                Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                                            });
+                                        },
+                                        result -> {
+                                            deleteContact();
+                                        });
+                                //
+                            });
+                })
+                .show();
     }
 
     void saveNameRemark() {

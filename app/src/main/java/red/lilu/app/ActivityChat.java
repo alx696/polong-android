@@ -62,6 +62,10 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
                 case "push":
                     String type = intent.getStringExtra("type");
 
+                    if (type.equals("ContactDelete") && intent.getStringExtra("id").equals(targetID)) {
+                        finish();
+                    }
+
                     if (type.equals("ChatMessage")) {
                         String peerID = intent.getStringExtra("peerID");
                         if (!peerID.equals(myID) && !peerID.equals(targetContact.id)) {
@@ -237,57 +241,8 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.blacklist) {
-            Snackbar.make(b.recyclerView, "确定要这样?", BaseTransientBottomBar.LENGTH_SHORT)
-                    .setAction("加黑名单", v -> {
-                        KcAPI.getOption(
-                                application,
-                                onError,
-                                option -> {
-                                    option.blacklist_id_array.add(targetContact.id);
 
-                                    //
-                                    KcAPI.setOptionBlacklistID(
-                                            TextUtils.join(",", option.blacklist_id_array),
-                                            application,
-                                            onError,
-                                            result -> {
-                                                option.blacklist_id_array.add(targetContact.id);
-
-                                                //
-                                                KcAPI.delContact(
-                                                        targetContact.id,
-                                                        application,
-                                                        onError,
-                                                        delContactResult -> {
-                                                            runOnUiThread(() -> {
-                                                                finish();
-                                                            });
-                                                        }
-                                                );
-                                                //
-                                            });
-                                    //
-                                });
-                    })
-                    .show();
-        }
-        if (id == R.id.delete) {
-            Snackbar.make(b.recyclerView, "确定要这样?", BaseTransientBottomBar.LENGTH_SHORT)
-                    .setAction("删除", v -> {
-                        KcAPI.delContact(
-                                targetContact.id,
-                                application,
-                                onError,
-                                result -> {
-                                    runOnUiThread(() -> {
-                                        finish();
-                                    });
-                                }
-                        );
-                    })
-                    .show();
-        } else if (id == R.id.clear) {
+        if (id == R.id.clear) {
             Snackbar.make(b.recyclerView, "确定要这样?", BaseTransientBottomBar.LENGTH_SHORT)
                     .setAction("清空消息", v -> {
                         KcAPI.deleteChatMessageByPeerID(
