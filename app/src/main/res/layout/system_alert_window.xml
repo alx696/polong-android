@@ -15,17 +15,11 @@
         android:text="提示"
         android:textColor="#ffffff" />
 
-    <ScrollView
+    <TextView
+        android:id="@+id/text_content"
         android:layout_width="match_parent"
-        android:layout_height="160dp">
-
-        <TextView
-            android:id="@+id/text_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#ffffff"
-            tools:text="内容" />
-
-    </ScrollView>
+        android:layout_height="wrap_content"
+        android:textColor="#ffffff"
+        tools:text="内容" />
 
 </LinearLayout>

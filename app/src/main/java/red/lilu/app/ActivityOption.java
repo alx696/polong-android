@@ -27,8 +27,8 @@ public class ActivityOption extends AppCompatActivity {
     private ActivityOptionBinding b;
     private MyApplication application;
     private ClipboardManager clipboardManager;
-    private String qrcodePath;
     private String id;
+    private String qrcodePath;
     private boolean optionChanged = false;
 
     @Override

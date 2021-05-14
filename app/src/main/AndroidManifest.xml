@@ -85,11 +85,11 @@
             android:windowSoftInputMode="stateAlwaysVisible" />
         <activity android:name=".ActivityRemoteControlTaskDo" />
         <activity
-            android:name="red.lilu.app.ActivityRemoteControlOption"
-            android:parentActivityName="red.lilu.app.ActivityMain" />
-        <activity
             android:name="red.lilu.app.ActivityOption"
             android:parentActivityName="red.lilu.app.ActivityMain" />
+        <activity
+            android:name="red.lilu.app.ActivityRemoteControlOption"
+            android:parentActivityName="red.lilu.app.ActivityOption" />
         <activity
             android:name="red.lilu.app.ActivityAdd"
             android:parentActivityName="red.lilu.app.ActivityMain" />

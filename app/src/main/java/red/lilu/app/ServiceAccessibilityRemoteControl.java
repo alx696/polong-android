@@ -69,7 +69,7 @@ public class ServiceAccessibilityRemoteControl extends AccessibilityService {
             if (event.getClassName() != null) {
                 className = event.getClassName().toString();
             }
-            Log.d(T, String.format("无障碍服务onAccessibilityEvent：%s, %s, %s", eventName, packageName, className));
+//            Log.d(T, String.format("无障碍服务onAccessibilityEvent：%s, %s, %s", eventName, packageName, className));
 
             // 获取通知内容（小米4C不支持）
             if (packageName.equals("red.lilu.app.polong")
@@ -101,8 +101,11 @@ public class ServiceAccessibilityRemoteControl extends AccessibilityService {
                     if (nodeInfoList.size() > 0) {
                         AccessibilityNodeInfo taskNodeInfo = nodeInfoList.get(0);
                         String json = taskNodeInfo.getText().toString();
-//                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+                        Log.d(T, "已经读取远程任务内容");
+                        performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
                         doTask(json);
+                    } else {
+                        Log.w(T, "没有找到远程任务内容");
                     }
                 }
             }
@@ -177,8 +180,8 @@ public class ServiceAccessibilityRemoteControl extends AccessibilityService {
 
         // 显示浮动窗口进行提示
         Intent intentServiceSystemAlertWindow = new Intent(getApplicationContext(), ServiceSystemAlertWindow.class);
-        intentServiceSystemAlertWindow.putExtra("title", "打卡");
-        intentServiceSystemAlertWindow.putExtra("content", json);
+        intentServiceSystemAlertWindow.putExtra("title", "正在执行远程任务");
+        intentServiceSystemAlertWindow.putExtra("content", "测试");
         startService(intentServiceSystemAlertWindow);
 
         // 进到首页

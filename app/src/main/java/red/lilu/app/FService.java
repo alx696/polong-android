@@ -418,12 +418,12 @@ public class FService extends Service implements kc.FeedCallback {
 
         // 检查是否加密锁定
         if (keyguardManager != null && keyguardManager.isKeyguardLocked()) {
-            Log.w(T, "解锁需要密码, 无法执行远程任务");
+            Log.w(T, "屏幕解锁需要密码，不能执行远程控制！");
 
             // 自动回复问题
             KcAPI.sendChatMessageText(
                     chatMessage.fromPeerID,
-                    "注意：设备已经锁屏且设置解锁密码，无法执行远程任务！",
+                    "注意：屏幕解锁需要密码，不能执行远程控制！",
                     application,
                     text -> {
                         Log.w(T, "自动回复失败：" + text);
@@ -453,15 +453,24 @@ public class FService extends Service implements kc.FeedCallback {
             unlockWakeLock.release();
         }
 
-        // 执行测试一加计算器任务
+        // 执行测试三星计算器任务
         ArrayList<Task> tasks = Lists.newArrayList(
-                new Task("点击应用图标", 400F, 1300F, 3000),
-                new Task("点击1", 180F, 1460F, 3000),
-                new Task("点击+", 870F, 1550F, 1000),
-                new Task("点击2", 400F, 1450F, 1000),
-                new Task("点击=", 880F, 1790F, 1000),
+                new Task("点击应用图标", 200F, 2130F, 3000),
+                new Task("点击1", 255F, 2315F, 3000),
+                new Task("点击+", 1210F, 2320F, 1000),
+                new Task("点击2", 555F, 2320F, 1000),
+                new Task("点击=", 1195F, 2600F, 1000),
                 new Task("[back]", 0F, 0F, 6000)
         );
+        // 执行测试一加计算器任务
+//        ArrayList<Task> tasks = Lists.newArrayList(
+//                new Task("点击应用图标", 400F, 1300F, 3000),
+//                new Task("点击1", 180F, 1460F, 3000),
+//                new Task("点击+", 870F, 1550F, 1000),
+//                new Task("点击2", 400F, 1450F, 1000),
+//                new Task("点击=", 880F, 1790F, 1000),
+//                new Task("[back]", 0F, 0F, 6000)
+//        );
         // 执行打卡任务
 //        ArrayList<Task> tasks = Lists.newArrayList(
 //                new Task("点击应用图标", 170F, 1765F, 3000),
@@ -475,8 +484,10 @@ public class FService extends Service implements kc.FeedCallback {
 
         Log.d(T, "显示触发远程任务窗口");
         Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlTaskDo.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
-                | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("json", taskJson);
         startActivity(intent);
         //-

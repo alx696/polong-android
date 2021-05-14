@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:focusableInTouchMode="true">
@@ -49,9 +48,10 @@
                         style="@style/TextAppearance.AppCompat.Caption"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="是否启用" />
+                        android:text="是否启用功能" />
 
                     <TextView
+                        android:id="@+id/text_enable"
                         style="@style/TextAppearance.AppCompat.Body1"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -59,14 +59,15 @@
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:fontFamily="monospace"
-                        tools:text="暂无" />
+                        android:text="否" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_enable"
+                    <Button
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false"
-                        android:text="停用"/>
+                        android:onClick="showAccessibilityServiceWindow"
+                        android:text="设置"
+                        app:icon="@drawable/ic_settings" />
                 </LinearLayout>
 
                 <TextView
@@ -86,9 +87,10 @@
                         style="@style/TextAppearance.AppCompat.Caption"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="悬浮窗口" />
+                        android:text="能否锁屏使用" />
 
                     <TextView
+                        android:id="@+id/text_lock_use"
                         style="@style/TextAppearance.AppCompat.Body1"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -96,14 +98,54 @@
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:fontFamily="monospace"
-                        android:text="悬浮显示提示信息" />
+                        android:text="否" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_draw_overlays"
+                    <Button
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false"
-                        android:text="停用"/>
+                        android:onClick="showkeyguardWindow"
+                        android:text="设置"
+                        app:icon="@drawable/ic_settings" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/line_grey" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextAppearance.AppCompat.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="是否悬浮提示" />
+
+                    <TextView
+                        android:id="@+id/text_overlay"
+                        style="@style/TextAppearance.AppCompat.Body1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:fontFamily="monospace"
+                        android:text="否" />
+
+                    <Button
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="showOverlayPermissionWindow"
+                        android:text="设置"
+                        app:icon="@drawable/ic_settings" />
                 </LinearLayout>
 
                 <TextView
