@@ -15,6 +15,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -285,6 +286,34 @@ public class FService extends Service implements kc.FeedCallback {
         pushIntent.putExtra("messageID", messageID);
         pushIntent.putExtra("state", state);
         broadcastManager.sendBroadcast(pushIntent);
+    }
+
+    @Override
+    public void feedCallbackOnRemoteControlReceiveVideoInfo(String s) {
+        Log.w(T, "远程控制收到视频信息:" + s);
+    }
+
+    @Override
+    public void feedCallbackOnRemoteControlReceiveVideoData(byte[] bytes) {
+        Log.w(T, "远程控制收到视频数据:" + bytes.length);
+    }
+
+    @Override
+    public void feedCallbackOnRemoteControlRequest(String s) {
+        Log.w(T, "远程控制收到请求:" + s);
+
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        KcAPI.RemoteControlInfo info = new KcAPI.RemoteControlInfo(metrics.widthPixels, metrics.heightPixels);
+        KcAPI.allowRemoteControl(
+                info,
+                application,
+                error -> {
+                    Log.w(T, error);
+                },
+                done -> {
+                    Log.d(T, "已经发送允许控制信息");
+                }
+        );
     }
 
     class LocalBroadcastReceiver extends BroadcastReceiver {

@@ -261,6 +261,10 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
             Intent intent = new Intent(getApplicationContext(), ActivityTargetInfo.class);
             intent.putExtra("id", targetContact.id);
             startActivityForResult(intent, REQUEST_CODE_INFO);
+        } else if (id == R.id.remote_control) {
+            Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlView.class);
+            intent.putExtra("id", targetContact.id);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);

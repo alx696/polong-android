@@ -12,5 +12,9 @@
         android:icon="@drawable/ic_perm_contact_calendar"
         android:title="信息"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/remote_control"
+        android:title="远程控制"
+        app:showAsAction="ifRoom" />
 
 </menu>

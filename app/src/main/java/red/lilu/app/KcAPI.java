@@ -3,6 +3,8 @@ package red.lilu.app;
 import android.os.Environment;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
@@ -46,6 +48,16 @@ public class KcAPI {
         String fileExtension;
         String state;
         boolean read;
+    }
+
+    public static class RemoteControlInfo {
+        int width;
+        int height;
+
+        public RemoteControlInfo(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
     }
 
     /**
@@ -373,6 +385,50 @@ public class KcAPI {
                 );
 
                 onDone.accept(map);
+            } catch (Exception e) {
+                Log.w(T, e);
+                onError.accept(e.getMessage());
+            }
+        }, myApplication.getExecutorService());
+    }
+
+    /**
+     * 允许远程控制
+     *
+     * @param info 为空表示拒绝
+     */
+    public static void allowRemoteControl(@Nullable RemoteControlInfo info,
+                                          MyApplication myApplication,
+                                          java.util.function.Consumer<String> onError,
+                                          java.util.function.Consumer<String> onDone) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                String json = "";
+                if (info != null) {
+                    json = myApplication.getGson().toJson(info);
+                }
+                Kc.allowRemoteControl(json);
+
+                onDone.accept("");
+            } catch (Exception e) {
+                Log.w(T, e);
+                onError.accept(e.getMessage());
+            }
+        }, myApplication.getExecutorService());
+    }
+
+    /**
+     * 发送远程控制数据
+     */
+    public static void sendRemoteControlVideoData(byte[] data,
+                                                  MyApplication myApplication,
+                                                  java.util.function.Consumer<String> onError,
+                                                  java.util.function.Consumer<String> onDone) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Kc.sendRemoteControlVideoData(data);
+
+                onDone.accept("");
             } catch (Exception e) {
                 Log.w(T, e);
                 onError.accept(e.getMessage());
