@@ -290,12 +290,23 @@ public class FService extends Service implements kc.FeedCallback {
 
     @Override
     public void feedCallbackOnRemoteControlReceiveVideoInfo(String s) {
-        Log.w(T, "远程控制收到视频信息:" + s);
+        Log.d(T, "远程控制收到视频信息:" + s);
+
+        Intent pushIntent = new Intent("push");
+        pushIntent.putExtra("type", "RemoteControlReceiveVideoInfo");
+        pushIntent.putExtra("json", s);
+        broadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
-    public void feedCallbackOnRemoteControlReceiveVideoData(byte[] bytes) {
-        Log.w(T, "远程控制收到视频数据:" + bytes.length);
+    public void feedCallbackOnRemoteControlReceiveVideoData(String presentationTimeUs, byte[] bytes) {
+        Log.d(T, "远程控制收到视频数据:" + presentationTimeUs + "," + bytes.length);
+
+        Intent pushIntent = new Intent("push");
+        pushIntent.putExtra("type", "RemoteControlReceiveVideoData");
+        pushIntent.putExtra("presentationTimeUs", presentationTimeUs);
+        pushIntent.putExtra("data", bytes);
+        broadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
@@ -312,6 +323,14 @@ public class FService extends Service implements kc.FeedCallback {
                 },
                 done -> {
                     Log.d(T, "已经发送允许控制信息");
+
+                    Log.d(T, "显示允许远程任务窗口");
+                    Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlAllow.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
+                            | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
                 }
         );
     }
@@ -333,6 +352,10 @@ public class FService extends Service implements kc.FeedCallback {
                         notificationManager.cancel(NOTIFICATION_MESSAGE_ID);
                         notificationManager.cancel(NOTIFICATION_MESSAGE_ID_OLD);
                     }
+
+                    break;
+                case "MediaProjection":
+                    shareScreen();
 
                     break;
             }
@@ -520,6 +543,10 @@ public class FService extends Service implements kc.FeedCallback {
         intent.putExtra("json", taskJson);
         startActivity(intent);
         //-
+    }
+
+    private void shareScreen() {
+//        MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
     }
 
 }

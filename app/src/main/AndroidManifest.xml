@@ -103,6 +103,7 @@
             android:name="red.lilu.app.ActivityTargetInfo"
             android:parentActivityName="red.lilu.app.ActivityChat" />
         <activity android:name=".ActivityRemoteControlView" />
+        <activity android:name=".ActivityRemoteControlAllow" />
     </application>
 
 </manifest>

@@ -393,6 +393,27 @@ public class KcAPI {
     }
 
     /**
+     * 请求远程控制
+     *
+     * @param id 节点ID
+     */
+    public static void requestRemoteControl(String id,
+                                            MyApplication myApplication,
+                                            java.util.function.Consumer<String> onError,
+                                            java.util.function.Consumer<String> onDone) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Kc.requestRemoteControl(id); // TODO 存在错误
+
+                onDone.accept("");
+            } catch (Exception e) {
+                Log.w(T, e);
+                onError.accept(e.getMessage());
+            }
+        }, myApplication.getExecutorService());
+    }
+
+    /**
      * 允许远程控制
      *
      * @param info 为空表示拒绝
@@ -420,13 +441,13 @@ public class KcAPI {
     /**
      * 发送远程控制数据
      */
-    public static void sendRemoteControlVideoData(byte[] data,
+    public static void sendRemoteControlVideoData(String presentationTimeUs, byte[] data,
                                                   MyApplication myApplication,
                                                   java.util.function.Consumer<String> onError,
                                                   java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
-                Kc.sendRemoteControlVideoData(data);
+                Kc.sendRemoteControlVideoData(presentationTimeUs, data);
 
                 onDone.accept("");
             } catch (Exception e) {
