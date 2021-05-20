@@ -65,9 +65,9 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                         Log.w(T, "收到视频信息" + json);
                     } else if (type.equals("RemoteControlReceiveVideoData")) {
                         String presentationTimeUs = intent.getStringExtra("presentationTimeUs");
-                        byte[] data = intent.getByteArrayExtra("data");
+//                        byte[] data = intent.getByteArrayExtra("data");
                         Log.w(T, "收到视频数据" + presentationTimeUs);
-                        Log.w(T, "收到视频数据" + data.length);
+//                        Log.w(T, "收到视频数据" + data.length);
                     }
 
                     break;
