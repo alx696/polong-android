@@ -74,7 +74,7 @@ public class ActivityRemoteControlAllow extends AppCompatActivity {
                 },
                 data -> {
                     KcAPI.sendRemoteControlVideoData(
-                            String.valueOf(data.presentationTimeUs),
+                            data.presentationTimeUs,
                             data.bytes,
                             application,
                             error -> {

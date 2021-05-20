@@ -441,7 +441,7 @@ public class KcAPI {
     /**
      * 发送远程控制数据
      */
-    public static void sendRemoteControlVideoData(String presentationTimeUs, byte[] data,
+    public static void sendRemoteControlVideoData(long presentationTimeUs, byte[] data,
                                                   MyApplication myApplication,
                                                   java.util.function.Consumer<String> onError,
                                                   java.util.function.Consumer<String> onDone) {

@@ -299,7 +299,7 @@ public class FService extends Service implements kc.FeedCallback {
     }
 
     @Override
-    public void feedCallbackOnRemoteControlReceiveVideoData(String presentationTimeUs, byte[] bytes) {
+    public void feedCallbackOnRemoteControlReceiveVideoData(long presentationTimeUs, byte[] bytes) {
         Log.d(T, "远程控制收到视频数据:" + presentationTimeUs + "," + bytes.length);
 
         Intent pushIntent = new Intent("push");
