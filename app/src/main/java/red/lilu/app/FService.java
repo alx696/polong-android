@@ -12,8 +12,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.media.projection.MediaProjection;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.PowerManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -40,6 +44,7 @@ public class FService extends Service implements kc.FeedCallback {
     public static final int NOTIFICATION_FOREGROUND_ID = 1;
     public static final int NOTIFICATION_MESSAGE_ID = 2;
     public static final int NOTIFICATION_MESSAGE_ID_OLD = 3;
+    public static final int MESSENGER_WHAT_REMOTE_CONTROL_ASK = 1;
     private MyApplication application;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
@@ -59,9 +64,42 @@ public class FService extends Service implements kc.FeedCallback {
     public FService() {
     }
 
+    /**
+     * Handler of incoming messages from clients.
+     */
+    private class IncomingHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MESSENGER_WHAT_REMOTE_CONTROL_ASK:
+                    Log.i(T, "收到远程控制询问结果");
+
+                    if (msg.obj == null) {
+                        refuseRemoteControl();
+                    } else {
+                        acceptRemoteControl(
+                                (MediaProjection) msg.obj
+                        );
+                    }
+
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+
+    }
+
+    /**
+     * Target we publish for clients to send messages to IncomingHandler.
+     */
+    Messenger messenger;
+
     @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        messenger = new Messenger(new IncomingHandler());
+        return messenger.getBinder();
     }
 
     @Override
@@ -310,29 +348,25 @@ public class FService extends Service implements kc.FeedCallback {
     }
 
     @Override
-    public void feedCallbackOnRemoteControlRequest(String s) {
-        Log.w(T, "远程控制收到请求:" + s);
+    public void feedCallbackOnRemoteControlRequest(String id) {
+        Log.i(T, "收到远程控制请求:" + id);
 
-        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-        KcAPI.RemoteControlInfo info = new KcAPI.RemoteControlInfo(metrics.widthPixels, metrics.heightPixels);
-        KcAPI.allowRemoteControl(
-                info,
-                application,
-                error -> {
-                    Log.w(T, error);
-                },
-                done -> {
-                    Log.d(T, "已经发送允许控制信息");
+        KcAPI.Contact contact = contactMap.get(id);
+        if (contact == null) {
+            Log.w(T, "没有找到联系人，拒绝远程控制请求");
+            refuseRemoteControl();
+            return;
+        }
 
-                    Log.d(T, "显示允许远程任务窗口");
-                    Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlAllow.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                            | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
-                            | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    startActivity(intent);
-                }
-        );
+        // 显示提示信息并询问用户
+        Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlAsk.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("id", id);
+        intent.putExtra("name", contact.name);
+        startActivity(intent);
     }
 
     class LocalBroadcastReceiver extends BroadcastReceiver {
@@ -352,10 +386,6 @@ public class FService extends Service implements kc.FeedCallback {
                         notificationManager.cancel(NOTIFICATION_MESSAGE_ID);
                         notificationManager.cancel(NOTIFICATION_MESSAGE_ID_OLD);
                     }
-
-                    break;
-                case "MediaProjection":
-                    shareScreen();
 
                     break;
             }
@@ -545,8 +575,56 @@ public class FService extends Service implements kc.FeedCallback {
         //-
     }
 
-    private void shareScreen() {
-//        MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+    private void refuseRemoteControl() {
+        KcAPI.allowRemoteControl(
+                null,
+                application,
+                error -> {
+                    Log.w(T, error);
+                },
+                done -> {
+                    //
+                }
+        );
+    }
+
+    private void acceptRemoteControl(MediaProjection mediaProjection) {
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        KcAPI.RemoteControlInfo info = new KcAPI.RemoteControlInfo(metrics.widthPixels, metrics.heightPixels);
+        KcAPI.allowRemoteControl(
+                info,
+                application,
+                error -> {
+                    Log.w(T, error);
+                },
+                done -> {
+                    shareScreen(mediaProjection);
+                }
+        );
+    }
+
+    private void shareScreen(MediaProjection mediaProjection) {
+        RTCScreenEncoder rtcScreenEncoder = new RTCScreenEncoder(
+                application,
+                mediaProjection,
+                error -> {
+                    Log.w(T, error);
+                },
+                data -> {
+                    KcAPI.sendRemoteControlVideoData(
+                            data.presentationTimeUs,
+                            data.bytes,
+                            application,
+                            error -> {
+                                Log.w(T, error);
+                            },
+                            done -> {
+                                //
+                            }
+                    );
+                }
+        );
+        rtcScreenEncoder.start();
     }
 
 }

@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,6 +58,10 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                         application,
                         error -> {
                             Log.w(T, error);
+                            runOnUiThread(() -> {
+                                Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                                finish();
+                            });
                         },
                         done -> {
                             //
@@ -148,29 +153,25 @@ public class ActivityRemoteControlView extends AppCompatActivity {
         Log.d(T, String.format("外壳尺寸: %d,%d", wrapWidth, wrapHeight));
 
         // 按照视频比例计算SurfaceTexture在外壳内的最大尺寸
-        int videoMatchWidth;
-        int videoMatchHeight;
+        int matchWidth = videoWidth;
+        int matchHeight = videoHeight;
         if (videoWidth > wrapWidth) {
             // 按比例缩小宽度
-            videoMatchWidth = wrapWidth;
-            videoHeight = (int) ((float) videoMatchWidth / (float) videoWidth * videoHeight);
-        } else {
-            videoMatchWidth = videoWidth;
+            matchWidth = wrapWidth;
+            matchHeight = (int) (matchWidth * (float) videoHeight / (float) videoWidth);
         }
-        Log.d(T, String.format("缩小宽度尺寸: %d,%d", videoMatchWidth, videoHeight));
+        Log.d(T, String.format("缩小宽度尺寸: %d,%d", matchWidth, matchHeight));
         if (videoHeight > wrapHeight) {
             // 按比例缩小高度
-            videoMatchHeight = wrapHeight;
-            videoMatchWidth = (int) ((float) videoMatchHeight / (float) videoHeight * videoMatchWidth);
-        } else {
-            videoMatchHeight = videoHeight;
+            matchHeight = wrapHeight;
+            matchWidth = (int) (matchHeight * (float) videoWidth / (float) videoHeight);
         }
-        Log.d(T, String.format("缩小高度尺寸: %d,%d", videoMatchWidth, videoMatchHeight));
+        Log.d(T, String.format("缩小宽度尺寸: %d,%d", matchWidth, matchHeight));
 
         // 调整SurfaceTexture尺寸
         ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
-        layoutParams.width = videoMatchWidth;
-        layoutParams.height = videoMatchHeight;
+        layoutParams.width = matchWidth;
+        layoutParams.height = matchHeight;
         textureView.setLayoutParams(layoutParams);
     }
 
