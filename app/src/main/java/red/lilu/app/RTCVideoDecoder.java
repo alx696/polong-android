@@ -12,18 +12,17 @@ public class RTCVideoDecoder {
 
     private static final String T = "调试";
     private static final String VideoMimeType = MediaFormat.MIMETYPE_VIDEO_AVC;
-    private static final int VideoWidth = 1280;
-    private static final int VideoHeight = 720;
     private MediaCodec videoDecodeMediaCodec;
 
-    public RTCVideoDecoder(ByteBuffer csd0ByteBuffer,
+    public RTCVideoDecoder(int width, int height,
+                           ByteBuffer csd0ByteBuffer,
                            SurfaceTexture targetSurfaceTexture,
                            java.util.function.Consumer<String> onError) {
         Log.i(T, "视频解码器开始工作");
         try {
             // 创建解码格式时必须设置CSD, 否则画面无法正常显示
             // https://android.googlesource.com/platform/cts/+/jb-mr2-release/tests/tests/media/src/android/media/cts/EncodeDecodeTest.java#573
-            MediaFormat videoDecodeFormat = MediaFormat.createVideoFormat(VideoMimeType, VideoWidth, VideoHeight);
+            MediaFormat videoDecodeFormat = MediaFormat.createVideoFormat(VideoMimeType, width, height);
             videoDecodeFormat.setByteBuffer("csd-0", csd0ByteBuffer);
 //            // 下面方法只有在录制端是竖屏状态时能够保持播放方向与录制端一致, 横屏状态时方向总是差了180度. 调整输出Surface效果更好.
 //            videoDecodeFormat.setInteger(MediaFormat.KEY_ROTATION, orientation);
