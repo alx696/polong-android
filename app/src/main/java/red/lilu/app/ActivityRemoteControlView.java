@@ -8,6 +8,8 @@ import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.TextureView;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,7 +39,7 @@ public class ActivityRemoteControlView extends AppCompatActivity {
         broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastReceiver = new LocalBroadcastReceiver();
 
-        b.textureVideo.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+        b.texture.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
                 surfaceTexture = surface;
@@ -109,6 +111,12 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                         Log.i(T, "收到视频信息" + json);
 
                         remoteControlInfo = application.getGson().fromJson(json, KcAPI.RemoteControlInfo.class);
+                        resizeTextureView(
+                                b.layoutWrap,
+                                b.texture,
+                                remoteControlInfo.width,
+                                remoteControlInfo.height
+                        );
                     } else if (type.equals("RemoteControlReceiveVideoData")) {
                         long presentationTimeUs = intent.getLongExtra("presentationTimeUs", 0);
                         byte[] data = intent.getByteArrayExtra("data");
@@ -131,6 +139,39 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                     break;
             }
         }
+    }
+
+    private void resizeTextureView(View wrap, TextureView textureView, int videoWidth, int videoHeight) {
+        // 获取外壳尺寸
+        int wrapWidth = wrap.getWidth();
+        int wrapHeight = wrap.getHeight();
+        Log.d(T, String.format("外壳尺寸: %d,%d", wrapWidth, wrapHeight));
+
+        // 按照视频比例计算SurfaceTexture在外壳内的最大尺寸
+        int videoMatchWidth;
+        int videoMatchHeight;
+        if (videoWidth > wrapWidth) {
+            // 按比例缩小宽度
+            videoMatchWidth = wrapWidth;
+            videoHeight = (int) ((float) videoMatchWidth / (float) videoWidth * videoHeight);
+        } else {
+            videoMatchWidth = videoWidth;
+        }
+        Log.d(T, String.format("缩小宽度尺寸: %d,%d", videoMatchWidth, videoHeight));
+        if (videoHeight > wrapHeight) {
+            // 按比例缩小高度
+            videoMatchHeight = wrapHeight;
+            videoMatchWidth = (int) ((float) videoMatchHeight / (float) videoHeight * videoMatchWidth);
+        } else {
+            videoMatchHeight = videoHeight;
+        }
+        Log.d(T, String.format("缩小高度尺寸: %d,%d", videoMatchWidth, videoMatchHeight));
+
+        // 调整SurfaceTexture尺寸
+        ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
+        layoutParams.width = videoMatchWidth;
+        layoutParams.height = videoMatchHeight;
+        textureView.setLayoutParams(layoutParams);
     }
 
 }
