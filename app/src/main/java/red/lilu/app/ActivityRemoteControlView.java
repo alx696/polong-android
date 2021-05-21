@@ -95,6 +95,17 @@ public class ActivityRemoteControlView extends AppCompatActivity {
 
         broadcastManager.unregisterReceiver(localBroadcastReceiver);
 
+        // 发出停止远程控制命令
+        KcAPI.closeRemoteControl(
+                application,
+                error -> {
+                    Log.w(T, error);
+                },
+                done -> {
+                    //
+                }
+        );
+
         if (rtcVideoDecoder != null) {
             rtcVideoDecoder.stop();
         }

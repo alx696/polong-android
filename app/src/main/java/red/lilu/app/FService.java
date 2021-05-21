@@ -60,6 +60,7 @@ public class FService extends Service implements kc.FeedCallback {
     private boolean mainUiShow = true; //主界面是否显示
     private String chatTargetID = ""; //会话界面对方ID
     private KeyguardManager keyguardManager;
+    private RTCScreenEncoder rtcScreenEncoder;
 
     public FService() {
     }
@@ -162,6 +163,7 @@ public class FService extends Service implements kc.FeedCallback {
         localBroadcastReceiver = new LocalBroadcastReceiver();
         IntentFilter broadcastIntentFilter = new IntentFilter();
         broadcastIntentFilter.addAction("ui");
+        broadcastIntentFilter.addAction("RemoteControlClose");
 
         //启动kc(持续运行)
         application.getExecutorService().execute(() -> {
@@ -388,6 +390,12 @@ public class FService extends Service implements kc.FeedCallback {
                     }
 
                     break;
+                case "RemoteControlClose":
+                    if (rtcScreenEncoder != null) {
+                        rtcScreenEncoder.stop();
+                    }
+
+                    break;
             }
         }
     }
@@ -576,7 +584,7 @@ public class FService extends Service implements kc.FeedCallback {
     }
 
     private void refuseRemoteControl() {
-        KcAPI.allowRemoteControl(
+        KcAPI.responseRemoteControl(
                 null,
                 application,
                 error -> {
@@ -591,7 +599,7 @@ public class FService extends Service implements kc.FeedCallback {
     private void acceptRemoteControl(MediaProjection mediaProjection) {
         DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
         KcAPI.RemoteControlInfo info = new KcAPI.RemoteControlInfo(metrics.widthPixels, metrics.heightPixels);
-        KcAPI.allowRemoteControl(
+        KcAPI.responseRemoteControl(
                 info,
                 application,
                 error -> {
@@ -604,7 +612,7 @@ public class FService extends Service implements kc.FeedCallback {
     }
 
     private void shareScreen(MediaProjection mediaProjection) {
-        RTCScreenEncoder rtcScreenEncoder = new RTCScreenEncoder(
+        rtcScreenEncoder = new RTCScreenEncoder(
                 application,
                 mediaProjection,
                 error -> {
@@ -625,6 +633,14 @@ public class FService extends Service implements kc.FeedCallback {
                 }
         );
         rtcScreenEncoder.start();
+
+        // TODO 提示换成通知类型似乎更好交互
+
+//        // 显示提示(可以关闭)
+//        Intent intentServiceSystemAlertWindow = new Intent(getApplicationContext(), ServiceSystemAlertWindowRemoteControl.class);
+//        startService(intentServiceSystemAlertWindow);
+//
+//        // 如何监听停止动作?
     }
 
 }
