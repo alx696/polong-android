@@ -612,7 +612,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     }
 
     private void refuseRemoteControl() {
-        KcAPI.allowRemoteControl(
+        KcAPI.responseRemoteControl(
                 null,
                 application,
                 error -> {
@@ -627,7 +627,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     private void acceptRemoteControl(MediaProjection mediaProjection) {
         DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
         KcAPI.RemoteControlInfo info = new KcAPI.RemoteControlInfo(metrics.widthPixels, metrics.heightPixels);
-        KcAPI.allowRemoteControl(
+        KcAPI.responseRemoteControl(
                 info,
                 application,
                 error -> {
