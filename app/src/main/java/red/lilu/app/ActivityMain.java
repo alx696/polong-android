@@ -82,6 +82,12 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
         );
 
         checkPermission();
+
+        if (getIntent().getStringExtra("remote_control_stop") != null) {
+            Log.i(T, "发送停止远程控制广播");
+            Intent broadcastIntent = new Intent("remote_control_stop");
+            broadcastManager.sendBroadcast(broadcastIntent);
+        }
     }
 
     @Override
@@ -309,7 +315,7 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
 
     private void init() {
         //启动服务
-        serviceIntent = new Intent(getApplicationContext(), FService.class);
+        serviceIntent = new Intent(getApplicationContext(), ServiceForeground.class);
         ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
 
         //从DNS更新信息

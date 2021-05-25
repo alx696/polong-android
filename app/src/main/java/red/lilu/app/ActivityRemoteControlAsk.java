@@ -67,7 +67,7 @@ public class ActivityRemoteControlAsk extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        bindService(new Intent(this, FService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(this, ServiceForeground.class), serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class ActivityRemoteControlAsk extends AppCompatActivity {
      */
     private void feedback(@Nullable MediaProjection mediaProjection) {
         Message message = new Message();
-        message.what = FService.MESSENGER_WHAT_REMOTE_CONTROL_ASK;
+        message.what = ServiceForeground.MESSENGER_WHAT_REMOTE_CONTROL_ASK;
         message.obj = mediaProjection;
         try {
             Log.i(T, "发送媒体投影");

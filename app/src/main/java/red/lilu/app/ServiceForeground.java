@@ -31,12 +31,13 @@ import com.google.gson.reflect.TypeToken;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import kc.Kc;
 
-public class FService extends Service implements kc.FeedCallback {
+public class ServiceForeground extends Service implements kc.FeedCallback {
 
     private static final String T = "调试";
     public static final String NOTIFICATION_CHANNEL_FOREGROUND_ID = "前台服务";
@@ -44,14 +45,14 @@ public class FService extends Service implements kc.FeedCallback {
     public static final int NOTIFICATION_FOREGROUND_ID = 1;
     public static final int NOTIFICATION_MESSAGE_ID = 2;
     public static final int NOTIFICATION_MESSAGE_ID_OLD = 3;
+    public static final int NOTIFICATION_REMOTE_CONTROL = 4;
     public static final int MESSENGER_WHAT_REMOTE_CONTROL_ASK = 1;
     private MyApplication application;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
     private NotificationManager notificationManager;
-    private PendingIntent mainActivityPendingIntent;
-    private LocalBroadcastManager broadcastManager;
-    private LocalBroadcastReceiver localBroadcastReceiver;
+    private LocalBroadcastManager localBroadcastManager;
+    private LocalBroadcastReceiver broadcastReceiver;
     private Timer timer;
     private boolean stop = false;
     private String kcID = "";
@@ -60,8 +61,9 @@ public class FService extends Service implements kc.FeedCallback {
     private boolean mainUiShow = true; //主界面是否显示
     private String chatTargetID = ""; //会话界面对方ID
     private KeyguardManager keyguardManager;
+    private RTCScreenEncoder rtcScreenEncoder;
 
-    public FService() {
+    public ServiceForeground() {
     }
 
     /**
@@ -110,11 +112,7 @@ public class FService extends Service implements kc.FeedCallback {
         application = (MyApplication) getApplication();
 
         //显示前台运行通知
-        Intent mainActivityIntent = new Intent(getApplicationContext(), ActivityMain.class);
-        mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        mainActivityPendingIntent = PendingIntent.getActivity(
-                getApplicationContext(), 0, mainActivityIntent, PendingIntent.FLAG_CANCEL_CURRENT
-        );
+
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel foregroundNotificationChannel = new NotificationChannel(
@@ -139,15 +137,10 @@ public class FService extends Service implements kc.FeedCallback {
             messageNotificationChannel.setLightColor(Color.GRAY);
             notificationManager.createNotificationChannel(messageNotificationChannel);
         }
-        Notification notification = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_FOREGROUND_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("去中心化对等网络")
-                .setContentText("平等互联,自由通信")
-                .setContentIntent(mainActivityPendingIntent)
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .build();
-        startForeground(NOTIFICATION_FOREGROUND_ID, notification);
+        startForeground(
+                NOTIFICATION_FOREGROUND_ID,
+                getForegroundNotification("平等互联,自由通信")
+        );
 
         //唤醒(对一加手机有效, 否则后台状态就冻结了.)
         // https://developer.android.com/training/scheduling/wakelock#cpu
@@ -158,16 +151,17 @@ public class FService extends Service implements kc.FeedCallback {
         }
         keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
 
-        broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-        localBroadcastReceiver = new LocalBroadcastReceiver();
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        broadcastReceiver = new LocalBroadcastReceiver();
         IntentFilter broadcastIntentFilter = new IntentFilter();
         broadcastIntentFilter.addAction("ui");
+        broadcastIntentFilter.addAction("remote_control_stop");
 
         //启动kc(持续运行)
         application.getExecutorService().execute(() -> {
             try {
                 // 启动
-                Kc.start(getFilesDir().getAbsolutePath(), KcAPI.getFileDirectory(application).getAbsolutePath(), 0, FService.this);
+                Kc.start(getFilesDir().getAbsolutePath(), KcAPI.getFileDirectory(application).getAbsolutePath(), 0, ServiceForeground.this);
             } catch (Exception e) {
                 Log.w(T, e);
             }
@@ -196,8 +190,8 @@ public class FService extends Service implements kc.FeedCallback {
                         }
                 );
 
-                broadcastManager.registerReceiver(
-                        localBroadcastReceiver,
+                localBroadcastManager.registerReceiver(
+                        broadcastReceiver,
                         broadcastIntentFilter
                 );
                 sendReadyBroadcast();
@@ -206,6 +200,8 @@ public class FService extends Service implements kc.FeedCallback {
                 Log.w(T, e);
             }
         });
+
+        showRemoteControlNotification();
     }
 
     @Override
@@ -226,7 +222,7 @@ public class FService extends Service implements kc.FeedCallback {
         Log.i(T, "服务销毁");
 
         stop = true;
-        broadcastManager.unregisterReceiver(localBroadcastReceiver);
+        localBroadcastManager.unregisterReceiver(broadcastReceiver);
         timer.cancel();
         Kc.stop();
         notificationManager.cancelAll();
@@ -244,7 +240,7 @@ public class FService extends Service implements kc.FeedCallback {
         Intent pushIntent = new Intent("push");
         pushIntent.putExtra("type", "ContactDelete");
         pushIntent.putExtra("id", id);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
@@ -266,7 +262,7 @@ public class FService extends Service implements kc.FeedCallback {
         Intent pushIntent = new Intent("push");
         pushIntent.putExtra("type", "ContactUpdate");
         pushIntent.putExtra("data", contact.id);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
@@ -277,7 +273,7 @@ public class FService extends Service implements kc.FeedCallback {
         pushIntent.putExtra("type", "PeerConnectState");
         pushIntent.putExtra("id", id);
         pushIntent.putExtra("isConnect", isConnect);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
     }
 
     private static class Task {
@@ -301,7 +297,7 @@ public class FService extends Service implements kc.FeedCallback {
         pushIntent.putExtra("type", "ChatMessage");
         pushIntent.putExtra("peerID", peerID);
         pushIntent.putExtra("json", json);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
 
         KcAPI.ChatMessage chatMessage = application.getGson().fromJson(
                 json,
@@ -323,7 +319,7 @@ public class FService extends Service implements kc.FeedCallback {
         pushIntent.putExtra("peerID", peerID);
         pushIntent.putExtra("messageID", messageID);
         pushIntent.putExtra("state", state);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
@@ -333,7 +329,7 @@ public class FService extends Service implements kc.FeedCallback {
         Intent pushIntent = new Intent("push");
         pushIntent.putExtra("type", "RemoteControlReceiveVideoInfo");
         pushIntent.putExtra("json", s);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
@@ -344,7 +340,7 @@ public class FService extends Service implements kc.FeedCallback {
         pushIntent.putExtra("type", "RemoteControlReceiveVideoData");
         pushIntent.putExtra("presentationTimeUs", presentationTimeUs);
         pushIntent.putExtra("data", bytes);
-        broadcastManager.sendBroadcast(pushIntent);
+        localBroadcastManager.sendBroadcast(pushIntent);
     }
 
     @Override
@@ -388,8 +384,30 @@ public class FService extends Service implements kc.FeedCallback {
                     }
 
                     break;
+                case "remote_control_stop": {
+                    stopShareScreen();
+
+                    break;
+                }
             }
         }
+    }
+
+    private Notification getForegroundNotification(String text) {
+        Intent activityIntent = new Intent(getApplicationContext(), ActivityMain.class);
+        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        return new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_FOREGROUND_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("去中心化对等网络")
+                .setContentText(text)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .build();
     }
 
     /**
@@ -398,7 +416,7 @@ public class FService extends Service implements kc.FeedCallback {
     private void sendReadyBroadcast() {
         Intent idIntent = new Intent("kcID");
         idIntent.putExtra("data", kcID);
-        broadcastManager.sendBroadcast(idIntent);
+        localBroadcastManager.sendBroadcast(idIntent);
     }
 
     /**
@@ -415,28 +433,16 @@ public class FService extends Service implements kc.FeedCallback {
                         new TypeToken<KcAPI.State>() {
                         }.getType()
                 );
-                updateForegroundNotification(state.peerCount, state.connCount);
+                notificationManager.notify(
+                        NOTIFICATION_FOREGROUND_ID,
+                        getForegroundNotification(
+                                String.format(Locale.CHINA, "节点数量: %d 连接数量: %d", state.peerCount, state.connCount)
+                        )
+                );
             }
         };
         timer = new Timer();
         timer.schedule(refreshStateTimerTask, 6000, 6000);
-    }
-
-    /**
-     * 更新前台通知
-     */
-    private void updateForegroundNotification(int peerCount, int connCount) {
-        notificationManager.notify(
-                NOTIFICATION_FOREGROUND_ID,
-                new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_FOREGROUND_ID)
-                        .setSmallIcon(R.drawable.ic_launcher_foreground)
-                        .setContentTitle("去中心化对等网络")
-                        .setContentText(String.format("节点数量: %d 连接数量: %d", peerCount, connCount))
-                        .setContentIntent(mainActivityPendingIntent)
-                        .setOngoing(true)
-                        .setOnlyAlertOnce(true)
-                        .build()
-        );
     }
 
     /**
@@ -454,6 +460,12 @@ public class FService extends Service implements kc.FeedCallback {
         }
         KcAPI.Contact contact = contactMap.get(m.fromPeerID);
         String contactName = contact.nameRemark.isEmpty() ? contact.name : contact.nameRemark;
+
+        Intent activityIntent = new Intent(getApplicationContext(), ActivityMain.class);
+        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT
+        );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             Person person = new Person.Builder()
@@ -475,7 +487,7 @@ public class FService extends Service implements kc.FeedCallback {
                     .setStyle(messagingStyle)
                     .setCategory(Notification.CATEGORY_MESSAGE)
                     .setAutoCancel(true) //点击清除
-                    .setContentIntent(mainActivityPendingIntent)
+                    .setContentIntent(pendingIntent)
                     .build();
             notificationManager.notify(NOTIFICATION_MESSAGE_ID, notification);
         } else {
@@ -487,10 +499,34 @@ public class FService extends Service implements kc.FeedCallback {
                     .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                     .setLights(Color.GRAY, 100, 100)
                     .setAutoCancel(true) //点击清除
-                    .setContentIntent(mainActivityPendingIntent)
+                    .setContentIntent(pendingIntent)
                     .build();
             notificationManager.notify(NOTIFICATION_MESSAGE_ID_OLD, notification);
         }
+    }
+
+    /**
+     * 显示远程控制通知
+     */
+    private void showRemoteControlNotification() {
+        Intent activityIntent = new Intent(getApplicationContext(), ActivityMain.class);
+        activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        activityIntent.putExtra("remote_control_stop", "");
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), 1, activityIntent, PendingIntent.FLAG_ONE_SHOT
+        );
+
+        notificationManager.notify(
+                NOTIFICATION_REMOTE_CONTROL,
+                new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_MESSAGE_ID)
+                        .setSmallIcon(R.drawable.ic_launcher_foreground)
+                        .setContentTitle("正被远程控制")
+                        .setContentText("点我停止远程控制")
+                        .setContentIntent(pendingIntent)
+                        .addAction(R.drawable.ic_close, "停止", pendingIntent)
+                        .setOngoing(true)
+                        .build()
+        );
     }
 
     private void handleRemoteTask(KcAPI.ChatMessage chatMessage) {
@@ -598,13 +634,13 @@ public class FService extends Service implements kc.FeedCallback {
                     Log.w(T, error);
                 },
                 done -> {
-                    shareScreen(mediaProjection);
+                    startShareScreen(mediaProjection);
                 }
         );
     }
 
-    private void shareScreen(MediaProjection mediaProjection) {
-        RTCScreenEncoder rtcScreenEncoder = new RTCScreenEncoder(
+    private void startShareScreen(MediaProjection mediaProjection) {
+        rtcScreenEncoder = new RTCScreenEncoder(
                 application,
                 mediaProjection,
                 error -> {
@@ -625,6 +661,16 @@ public class FService extends Service implements kc.FeedCallback {
                 }
         );
         rtcScreenEncoder.start();
+
+        showRemoteControlNotification();
+    }
+
+    private void stopShareScreen() {
+        notificationManager.cancel(NOTIFICATION_REMOTE_CONTROL);
+
+        if (rtcScreenEncoder != null) {
+            rtcScreenEncoder.stop();
+        }
     }
 
 }
