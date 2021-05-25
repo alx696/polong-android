@@ -41,6 +41,7 @@
         </provider>
 
         <service android:name=".ServiceSystemAlertWindow" />
+        <service android:name=".ServiceSystemAlertWindowRemoteControl" />
 
         <service
             android:name=".ServiceForeground"

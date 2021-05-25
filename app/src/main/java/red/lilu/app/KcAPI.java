@@ -403,7 +403,7 @@ public class KcAPI {
                                             java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
-                Kc.requestRemoteControl(id); // TODO 存在错误
+                Kc.requestRemoteControl(id);
 
                 onDone.accept("");
             } catch (Exception e) {
@@ -414,21 +414,39 @@ public class KcAPI {
     }
 
     /**
-     * 允许远程控制
+     * 关闭远程控制
+     */
+    public static void closeRemoteControl(MyApplication myApplication,
+                                          java.util.function.Consumer<String> onError,
+                                          java.util.function.Consumer<String> onDone) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Kc.closeRemoteControl();
+
+                onDone.accept("");
+            } catch (Exception e) {
+                Log.w(T, e);
+                onError.accept(e.getMessage());
+            }
+        }, myApplication.getExecutorService());
+    }
+
+    /**
+     * 响应远程控制
      *
      * @param info 为空表示拒绝
      */
-    public static void allowRemoteControl(@Nullable RemoteControlInfo info,
-                                          MyApplication myApplication,
-                                          java.util.function.Consumer<String> onError,
-                                          java.util.function.Consumer<String> onDone) {
+    public static void responseRemoteControl(@Nullable RemoteControlInfo info,
+                                             MyApplication myApplication,
+                                             java.util.function.Consumer<String> onError,
+                                             java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
                 String json = "";
                 if (info != null) {
                     json = myApplication.getGson().toJson(info);
                 }
-                Kc.allowRemoteControl(json);
+                Kc.responseRemoteControl(json);
 
                 onDone.accept("");
             } catch (Exception e) {
