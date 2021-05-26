@@ -62,6 +62,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     private String chatTargetID = ""; //会话界面对方ID
     private KeyguardManager keyguardManager;
     private RTCScreenEncoder rtcScreenEncoder;
+    private KcAPI.Contact remoteControlContact; // 远程控制联系人
 
     public ServiceForeground() {
     }
@@ -112,7 +113,6 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
         application = (MyApplication) getApplication();
 
         //显示前台运行通知
-
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel foregroundNotificationChannel = new NotificationChannel(
@@ -200,8 +200,6 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
                 Log.w(T, e);
             }
         });
-
-        showRemoteControlNotification();
     }
 
     @Override
@@ -323,32 +321,11 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     }
 
     @Override
-    public void feedCallbackOnRemoteControlReceiveVideoInfo(String s) {
-        Log.d(T, "远程控制收到视频信息:" + s);
-
-        Intent pushIntent = new Intent("push");
-        pushIntent.putExtra("type", "RemoteControlReceiveVideoInfo");
-        pushIntent.putExtra("json", s);
-        localBroadcastManager.sendBroadcast(pushIntent);
-    }
-
-    @Override
-    public void feedCallbackOnRemoteControlReceiveVideoData(long presentationTimeUs, byte[] bytes) {
-        Log.d(T, "远程控制收到视频数据:" + presentationTimeUs + "," + bytes.length);
-
-        Intent pushIntent = new Intent("push");
-        pushIntent.putExtra("type", "RemoteControlReceiveVideoData");
-        pushIntent.putExtra("presentationTimeUs", presentationTimeUs);
-        pushIntent.putExtra("data", bytes);
-        localBroadcastManager.sendBroadcast(pushIntent);
-    }
-
-    @Override
     public void feedCallbackOnRemoteControlRequest(String id) {
         Log.i(T, "收到远程控制请求:" + id);
 
-        KcAPI.Contact contact = contactMap.get(id);
-        if (contact == null) {
+        remoteControlContact = contactMap.get(id);
+        if (remoteControlContact == null) {
             Log.w(T, "没有找到联系人，拒绝远程控制请求");
             refuseRemoteControl();
             return;
@@ -361,8 +338,40 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("id", id);
-        intent.putExtra("name", contact.name);
+        intent.putExtra("name", remoteControlContact.name);
         startActivity(intent);
+    }
+
+    @Override
+    public void feedCallbackOnRemoteControlResponse(String s) {
+        Log.d(T, "远程控制收到视频信息:" + s);
+
+        Intent pushIntent = new Intent("push");
+        pushIntent.putExtra("type", "RemoteControlReceiveVideoInfo");
+        pushIntent.putExtra("json", s);
+        localBroadcastManager.sendBroadcast(pushIntent);
+    }
+
+    @Override
+    public void feedCallbackOnRemoteControlVideo(long presentationTimeUs, byte[] bytes) {
+//        Log.d(T, "远程控制收到视频数据:" + presentationTimeUs + "," + bytes.length);
+
+        Intent pushIntent = new Intent("push");
+        pushIntent.putExtra("type", "RemoteControlReceiveVideoData");
+        pushIntent.putExtra("presentationTimeUs", presentationTimeUs);
+        pushIntent.putExtra("data", bytes);
+        localBroadcastManager.sendBroadcast(pushIntent);
+    }
+
+    @Override
+    public void feedCallbackOnRemoteControlClose() {
+        Log.d(T, "远程控制收到关闭");
+
+        Intent pushIntent = new Intent("push");
+        pushIntent.putExtra("type", "RemoteControlClose");
+        localBroadcastManager.sendBroadcast(pushIntent);
+
+        stopShareScreen();
     }
 
     class LocalBroadcastReceiver extends BroadcastReceiver {
@@ -612,8 +621,8 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     }
 
     private void refuseRemoteControl() {
-        KcAPI.responseRemoteControl(
-                null,
+        KcAPI.remoteControlClose(
+                remoteControlContact.id,
                 application,
                 error -> {
                     Log.w(T, error);
@@ -627,7 +636,8 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     private void acceptRemoteControl(MediaProjection mediaProjection) {
         DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
         KcAPI.RemoteControlInfo info = new KcAPI.RemoteControlInfo(metrics.widthPixels, metrics.heightPixels);
-        KcAPI.responseRemoteControl(
+        KcAPI.remoteControlSendResponse(
+                remoteControlContact.id,
                 info,
                 application,
                 error -> {
@@ -647,7 +657,12 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
                     Log.w(T, error);
                 },
                 data -> {
-                    KcAPI.sendRemoteControlVideoData(
+                    if (remoteControlContact == null) {
+                        return;
+                    }
+
+                    KcAPI.remoteControlSendVideo(
+                            remoteControlContact.id,
                             data.presentationTimeUs,
                             data.bytes,
                             application,
@@ -670,6 +685,20 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
 
         if (rtcScreenEncoder != null) {
             rtcScreenEncoder.stop();
+        }
+
+        // 发出停止远程控制命令
+        if (remoteControlContact != null) {
+            KcAPI.remoteControlClose(
+                    remoteControlContact.id,
+                    application,
+                    error -> {
+                        Log.w(T, error);
+                    },
+                    done -> {
+                        remoteControlContact = null;
+                    }
+            );
         }
     }
 

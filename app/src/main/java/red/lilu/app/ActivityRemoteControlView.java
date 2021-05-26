@@ -25,10 +25,11 @@ public class ActivityRemoteControlView extends AppCompatActivity {
     private static final String T = "调试";
     private ActivityRemoteControlViewBinding b;
     private MyApplication application;
-    private LocalBroadcastManager broadcastManager;
+    private LocalBroadcastManager localBroadcastManager;
     private LocalBroadcastReceiver localBroadcastReceiver;
     private SurfaceTexture surfaceTexture;
     private RTCVideoDecoder rtcVideoDecoder;
+    private String targetID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,8 +38,10 @@ public class ActivityRemoteControlView extends AppCompatActivity {
         setContentView(b.getRoot());
 
         application = (MyApplication) getApplication();
-        broadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastReceiver = new LocalBroadcastReceiver();
+
+        targetID = getIntent().getStringExtra("targetID");
 
         b.texture.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
@@ -48,13 +51,13 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                 // 监听广播
                 IntentFilter broadcastIntentFilter = new IntentFilter();
                 broadcastIntentFilter.addAction("push");
-                broadcastManager.registerReceiver(
+                localBroadcastManager.registerReceiver(
                         localBroadcastReceiver,
                         broadcastIntentFilter
                 );
 
-                KcAPI.requestRemoteControl(
-                        getIntent().getStringExtra("targetID"),
+                KcAPI.remoteControlSendRequest(
+                        targetID,
                         application,
                         error -> {
                             Log.w(T, error);
@@ -93,10 +96,11 @@ public class ActivityRemoteControlView extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        broadcastManager.unregisterReceiver(localBroadcastReceiver);
+        localBroadcastManager.unregisterReceiver(localBroadcastReceiver);
 
         // 发出停止远程控制命令
-        KcAPI.closeRemoteControl(
+        KcAPI.remoteControlClose(
+                targetID,
                 application,
                 error -> {
                     Log.w(T, error);
@@ -150,6 +154,8 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                         }
 
                         rtcVideoDecoder.decode(data, presentationTimeUs);
+                    } else if (type.equals("RemoteControlClose")) {
+                        finish();
                     }
 
                     break;

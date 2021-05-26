@@ -397,31 +397,13 @@ public class KcAPI {
      *
      * @param id 节点ID
      */
-    public static void requestRemoteControl(String id,
-                                            MyApplication myApplication,
-                                            java.util.function.Consumer<String> onError,
-                                            java.util.function.Consumer<String> onDone) {
+    public static void remoteControlSendRequest(String id,
+                                                MyApplication myApplication,
+                                                java.util.function.Consumer<String> onError,
+                                                java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
-                Kc.requestRemoteControl(id);
-
-                onDone.accept("");
-            } catch (Exception e) {
-                Log.w(T, e);
-                onError.accept(e.getMessage());
-            }
-        }, myApplication.getExecutorService());
-    }
-
-    /**
-     * 关闭远程控制
-     */
-    public static void closeRemoteControl(MyApplication myApplication,
-                                          java.util.function.Consumer<String> onError,
-                                          java.util.function.Consumer<String> onDone) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Kc.closeRemoteControl();
+                Kc.remoteControlSendRequest(id);
 
                 onDone.accept("");
             } catch (Exception e) {
@@ -436,17 +418,36 @@ public class KcAPI {
      *
      * @param info 为空表示拒绝
      */
-    public static void responseRemoteControl(@Nullable RemoteControlInfo info,
+    public static void remoteControlSendResponse(String id,
+                                             @Nullable RemoteControlInfo info,
                                              MyApplication myApplication,
                                              java.util.function.Consumer<String> onError,
                                              java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
-                String json = "";
-                if (info != null) {
-                    json = myApplication.getGson().toJson(info);
-                }
-                Kc.responseRemoteControl(json);
+                Kc.remoteControlSendResponse(
+                        id,
+                        myApplication.getGson().toJson(info)
+                );
+
+                onDone.accept("");
+            } catch (Exception e) {
+                Log.w(T, e);
+                onError.accept(e.getMessage());
+            }
+        }, myApplication.getExecutorService());
+    }
+
+    /**
+     * 关闭远程控制
+     */
+    public static void remoteControlClose(String id,
+                                          MyApplication myApplication,
+                                          java.util.function.Consumer<String> onError,
+                                          java.util.function.Consumer<String> onDone) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Kc.remoteControlClose(id);
 
                 onDone.accept("");
             } catch (Exception e) {
@@ -459,13 +460,13 @@ public class KcAPI {
     /**
      * 发送远程控制数据
      */
-    public static void sendRemoteControlVideoData(long presentationTimeUs, byte[] data,
-                                                  MyApplication myApplication,
-                                                  java.util.function.Consumer<String> onError,
-                                                  java.util.function.Consumer<String> onDone) {
+    public static void remoteControlSendVideo(String id, long presentationTimeUs, byte[] data,
+                                              MyApplication myApplication,
+                                              java.util.function.Consumer<String> onError,
+                                              java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
-                Kc.sendRemoteControlVideoData(presentationTimeUs, data);
+                Kc.remoteControlSendVideo(id, presentationTimeUs, data);
 
                 onDone.accept("");
             } catch (Exception e) {
