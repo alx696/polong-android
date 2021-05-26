@@ -130,6 +130,8 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                         String json = intent.getStringExtra("json");
                         Log.i(T, "收到视频信息" + json);
 
+                        b.textTips.setText("准备接收画面");
+
                         remoteControlInfo = application.getGson().fromJson(json, KcAPI.RemoteControlInfo.class);
                         resizeTextureView(
                                 b.layoutWrap,
@@ -140,7 +142,7 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                     } else if (type.equals("RemoteControlReceiveVideoData")) {
                         long presentationTimeUs = intent.getLongExtra("presentationTimeUs", 0);
                         byte[] data = intent.getByteArrayExtra("data");
-                        Log.d(T, String.format("收到视频数据: %d, %d", presentationTimeUs, data.length));
+//                        Log.d(T, String.format("收到视频数据: %d, %d", presentationTimeUs, data.length));
 
                         if (rtcVideoDecoder == null) {
                             rtcVideoDecoder = new RTCVideoDecoder(
@@ -151,6 +153,8 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                                         Log.w(T, error);
                                     }
                             );
+
+                            b.textTips.setVisibility(View.INVISIBLE);
                         }
 
                         rtcVideoDecoder.decode(data, presentationTimeUs);
