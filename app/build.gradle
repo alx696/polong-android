@@ -6,7 +6,7 @@ android {
         applicationId "red.lilu.app.polong"
         minSdkVersion 24
         targetSdkVersion 30
-        versionCode 100
+        versionCode 101
         versionName '1.0.1'
     }
     def KeyPassword = System.getenv('ANDROID_KEY_PASSWORD')
