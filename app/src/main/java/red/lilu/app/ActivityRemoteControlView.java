@@ -51,6 +51,7 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                 // 监听广播
                 IntentFilter broadcastIntentFilter = new IntentFilter();
                 broadcastIntentFilter.addAction("push");
+                broadcastIntentFilter.addAction("remote_control_close");
                 localBroadcastManager.registerReceiver(
                         localBroadcastReceiver,
                         broadcastIntentFilter
@@ -121,7 +122,7 @@ public class ActivityRemoteControlView extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(T, "远程控制界面收到广播:" + intent.getAction());
+//            Log.d(T, "远程控制界面收到广播:" + intent.getAction());
             switch (intent.getAction()) {
                 case "push":
                     String type = intent.getStringExtra("type");
@@ -158,9 +159,11 @@ public class ActivityRemoteControlView extends AppCompatActivity {
                         }
 
                         rtcVideoDecoder.decode(data, presentationTimeUs);
-                    } else if (type.equals("RemoteControlClose")) {
-                        finish();
                     }
+
+                    break;
+                case "remote_control_close":
+                    finish();
 
                     break;
             }

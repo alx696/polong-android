@@ -57,7 +57,7 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
     class LocalBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(T, "会话界面收到广播:" + intent.getAction());
+//            Log.d(T, "会话界面收到广播:" + intent.getAction());
             switch (intent.getAction()) {
                 case "push":
                     String type = intent.getStringExtra("type");

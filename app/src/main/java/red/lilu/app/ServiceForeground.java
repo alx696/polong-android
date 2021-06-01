@@ -156,7 +156,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
         broadcastReceiver = new LocalBroadcastReceiver();
         IntentFilter broadcastIntentFilter = new IntentFilter();
         broadcastIntentFilter.addAction("ui");
-        broadcastIntentFilter.addAction("remote_control_stop");
+        broadcastIntentFilter.addAction("remote_control_close");
 
         //启动kc(持续运行)
         application.getExecutorService().execute(() -> {
@@ -368,11 +368,8 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     public void feedCallbackOnRemoteControlClose() {
         Log.d(T, "远程控制收到关闭");
 
-        Intent pushIntent = new Intent("push");
-        pushIntent.putExtra("type", "RemoteControlClose");
+        Intent pushIntent = new Intent("remote_control_close");
         localBroadcastManager.sendBroadcast(pushIntent);
-
-        stopShareScreen();
     }
 
     class LocalBroadcastReceiver extends BroadcastReceiver {
@@ -394,11 +391,12 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
                     }
 
                     break;
-                case "remote_control_stop": {
+
+                case "remote_control_close":
+                    Toast.makeText(getApplicationContext(), "远程控制关闭", Toast.LENGTH_LONG).show();
                     stopShareScreen();
 
                     break;
-                }
             }
         }
     }
@@ -521,7 +519,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     private void showRemoteControlNotification() {
         Intent activityIntent = new Intent(getApplicationContext(), ActivityMain.class);
         activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        activityIntent.putExtra("remote_control_stop", "");
+        activityIntent.putExtra("remote_control_close", "");
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 getApplicationContext(), 1, activityIntent, PendingIntent.FLAG_ONE_SHOT
         );
@@ -533,7 +531,6 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
                         .setContentTitle("正被远程控制")
                         .setContentText("点我停止远程控制")
                         .setContentIntent(pendingIntent)
-                        .addAction(R.drawable.ic_close, "停止", pendingIntent)
                         .setOngoing(true)
                         .build()
         );

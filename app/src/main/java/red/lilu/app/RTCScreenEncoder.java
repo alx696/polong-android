@@ -177,7 +177,11 @@ public class RTCScreenEncoder {
         }
 
         if (videoEncodeMediaCodec != null) {
-            videoEncodeMediaCodec.signalEndOfInputStream();
+            try {
+                videoEncodeMediaCodec.signalEndOfInputStream();
+            } catch (Exception e) {
+                //忽略
+            }
         }
     }
 }

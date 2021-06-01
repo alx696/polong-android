@@ -83,9 +83,9 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
 
         checkPermission();
 
-        if (getIntent().getStringExtra("remote_control_stop") != null) {
+        if (getIntent().getStringExtra("remote_control_close") != null) {
             Log.i(T, "发送停止远程控制广播");
-            Intent broadcastIntent = new Intent("remote_control_stop");
+            Intent broadcastIntent = new Intent("remote_control_close");
             broadcastManager.sendBroadcast(broadcastIntent);
         }
     }
@@ -211,7 +211,7 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
     class LocalBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(T, "主界面收到广播:" + intent.getAction());
+//            Log.d(T, "主界面收到广播:" + intent.getAction());
             switch (intent.getAction()) {
                 case "kcID":
                     kcID = intent.getStringExtra("data");
