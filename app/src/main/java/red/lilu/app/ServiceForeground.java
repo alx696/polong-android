@@ -333,6 +333,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
         }
 
         // 显示提示信息并询问用户
+        application.screenOn();
         Intent intent = new Intent(getApplicationContext(), ActivityRemoteControlAsk.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
@@ -537,7 +538,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     }
 
     private void handleRemoteTask(KcAPI.ChatMessage chatMessage) {
-        if (!chatMessage.text.equals("daka")) {
+        if (!chatMessage.text.equals("daka") && !chatMessage.fromPeerID.equals(kcID)) {
             return;
         }
 
@@ -565,46 +566,13 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
             return;
         }
 
-        // 锁屏状态自动亮屏
-        if (powerManager != null && !powerManager.isInteractive()) {
-            Log.d(T, "设备处于锁屏状态");
+        // 亮屏
+        application.screenOn();
 
-            // 亮屏
-            PowerManager.WakeLock unlockWakeLock = powerManager.newWakeLock(
-                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
-                    getPackageName() + ":wakelock:wakeup"
-            );
-            unlockWakeLock.acquire();
-            unlockWakeLock.release();
-        }
-
-        // 执行测试三星计算器任务
         ArrayList<Task> tasks = Lists.newArrayList(
-                new Task("点击应用图标", 200F, 2130F, 3000),
-                new Task("点击1", 255F, 2315F, 3000),
-                new Task("点击+", 1210F, 2320F, 1000),
-                new Task("点击2", 555F, 2320F, 1000),
-                new Task("点击=", 1195F, 2600F, 1000),
-                new Task("[back]", 0F, 0F, 6000)
+                new Task("点击应用图标", 160F, 1770F, 3000),
+                new Task("[back]", 0F, 0F, 16000)
         );
-        // 执行测试一加计算器任务
-//        ArrayList<Task> tasks = Lists.newArrayList(
-//                new Task("点击应用图标", 400F, 1300F, 3000),
-//                new Task("点击1", 180F, 1460F, 3000),
-//                new Task("点击+", 870F, 1550F, 1000),
-//                new Task("点击2", 400F, 1450F, 1000),
-//                new Task("点击=", 880F, 1790F, 1000),
-//                new Task("[back]", 0F, 0F, 6000)
-//        );
-        // 执行打卡任务
-//        ArrayList<Task> tasks = Lists.newArrayList(
-//                new Task("点击应用图标", 170F, 1765F, 3000),
-//                new Task("点击工作台", 530F, 1800F, 10000),
-//                new Task("点击考勤打卡", 130F, 1010F, 9000),
-//                new Task("点击打卡按钮", 530F, 1070F, 12000),
-//                new Task("[back]", 0F, 0F, 6000),
-//                new Task("[back]", 0F, 0F, 3000)
-//        );
         String taskJson = application.getGson().toJson(tasks);
 
         Log.d(T, "显示触发远程任务窗口");

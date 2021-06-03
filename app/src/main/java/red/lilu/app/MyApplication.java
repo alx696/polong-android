@@ -20,6 +20,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -220,6 +221,27 @@ public class MyApplication extends Application implements CameraXConfig.Provider
             }
         }
         return isRunning;
+    }
+
+    /**
+     * 亮屏
+     * 注意：如果按电源键不能直接使用（需要滑动或解锁）则功能无效！
+     */
+    public void screenOn() {
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager != null && !powerManager.isInteractive()) {
+            Log.d(T, "设备处于熄屏状态，进行亮屏");
+
+            // 亮屏
+            PowerManager.WakeLock unlockWakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                    getPackageName() + ":wakelock:wakeup"
+            );
+            unlockWakeLock.acquire();
+            unlockWakeLock.release();
+        } else {
+            Log.d(T, "没有电源管理器，或处于亮屏状态");
+        }
     }
 
     private static class DNSResponseAnswer {
