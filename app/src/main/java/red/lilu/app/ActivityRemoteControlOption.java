@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,20 +40,7 @@ public class ActivityRemoteControlOption extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // 检测辅助服务是否正在运行
-        boolean accessibilitySettingsOn = application.isAccessibilitySettingsOn(ServiceAccessibilityRemoteControl.class.getName());
-        Log.d(T, "是否启用功能:" + accessibilitySettingsOn);
-        b.textEnable.setText(accessibilitySettingsOn ? "是" : "否");
-
-        // 检测是否开启解锁密码
-        boolean isDeviceSecure = (keyguardManager != null && keyguardManager.isDeviceSecure());
-        Log.d(T, "能否锁屏使用:" + isDeviceSecure);
-        b.textLockUse.setText(!isDeviceSecure ? "是" : "否");
-
-        // 检测是否能够显示悬浮窗口
-        boolean drawOverlaysOn = Settings.canDrawOverlays(this);
-        Log.d(T, "是否悬浮提示:" + drawOverlaysOn);
-        b.textOverlay.setText(drawOverlaysOn ? "是" : "否");
+        b.textEnable.setText(isReady(false) ? "是" : "否");
     }
 
     @Override
@@ -81,28 +67,42 @@ public class ActivityRemoteControlOption extends AppCompatActivity {
         return super.onKeyDown(keyCode, event);
     }
 
-    public void showAccessibilityServiceWindow(View v) {
-        new MaterialAlertDialogBuilder(ActivityRemoteControlOption.this)
-                .setTitle("需要你来操作")
-                .setMessage("接下来会为你打开设置界面，在“已经下载的服务”中点“远程控制”，选择开启或关闭。")
-                .setNegativeButton("取消", (dialog, which) -> {
-                    dialog.cancel();
-                })
-                .setPositiveButton("继续", (dialog, which) -> {
-
-                    dialog.cancel();
-
-                    Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                    startActivity(intent);
-
-                })
-                .show();
+    public void request(View v) {
+        isReady(true);
     }
 
-    public void showkeyguardWindow(View v) {
-        new MaterialAlertDialogBuilder(ActivityRemoteControlOption.this)
+    private boolean isReady(boolean isRequest) {
+        //检测是否开启锁屏密码
+        if ((keyguardManager != null && keyguardManager.isDeviceSecure())) {
+            if (isRequest) {
+                showKeyguardWindow();
+            }
+            return false;
+        }
+
+        // 检测是否能够显示悬浮窗口
+        if (!Settings.canDrawOverlays(this)) {
+            if (isRequest) {
+                showOverlayPermissionWindow();
+            }
+            return false;
+        }
+
+        //检测无障碍功能是否开启
+        if (!application.isAccessibilitySettingsOn(ServiceAccessibilityRemoteControl.class.getName())) {
+            if (isRequest) {
+                showAccessibilityServiceWindow();
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    public void showKeyguardWindow() {
+        new MaterialAlertDialogBuilder(this)
                 .setTitle("需要你来操作")
-                .setMessage("屏幕解锁如果需要密码，锁屏时不能使用远程控制！接下来会为你打开设置界面，你可以选择关闭屏幕解锁（锁屏）密码。")
+                .setMessage("屏幕解锁如果需要密码，锁屏时不能使用远程控制！接下来会为你打开设置界面，请关闭屏幕解锁（锁屏）密码。")
                 .setNegativeButton("取消", (dialog, which) -> {
                     dialog.cancel();
                 })
@@ -115,16 +115,34 @@ public class ActivityRemoteControlOption extends AppCompatActivity {
                 .show();
     }
 
-    public void showOverlayPermissionWindow(View v) {
-        new MaterialAlertDialogBuilder(ActivityRemoteControlOption.this)
+    public void showOverlayPermissionWindow() {
+        new MaterialAlertDialogBuilder(this)
                 .setTitle("需要你来操作")
-                .setMessage("接下来会为你打开设置界面，你可以选择开启或关闭。")
+                .setMessage("为了在执行任务时进行提示，需要能够显示在顶部（悬浮窗，后台弹出窗口）。接下来会为你打开设置界面，请找到选项并开启允许。")
                 .setNegativeButton("取消", (dialog, which) -> {
                     dialog.cancel();
                 })
                 .setPositiveButton("继续", (dialog, which) -> {
 
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+
+                })
+                .show();
+    }
+
+    public void showAccessibilityServiceWindow() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("需要你来操作")
+                .setMessage("接下来会为你打开设置界面，请在“已经下载的服务”中点“破笼远程控制”，选择开启。")
+                .setNegativeButton("取消", (dialog, which) -> {
+                    dialog.cancel();
+                })
+                .setPositiveButton("继续", (dialog, which) -> {
+
+                    dialog.cancel();
+
+                    Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
                     startActivity(intent);
 
                 })

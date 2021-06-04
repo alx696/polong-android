@@ -9,8 +9,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- 其它 -->
-    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
@@ -40,17 +40,16 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <service android:name=".ServiceSystemAlertWindow" />
-
         <service
             android:name=".ServiceForeground"
             android:enabled="true"
             android:exported="false" />
 
+        <service android:name=".ServiceSystemAlertWindow" />
         <service
             android:name=".ServiceAccessibilityRemoteControl"
             android:enabled="true"
-            android:label="远程控制"
+            android:label="破笼远程控制"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
@@ -58,7 +57,7 @@
 
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_remote_control" />
+                android:resource="@xml/accessibility_service" />
         </service>
 
         <!-- single启动模式时,如果已经创建则需在onNewIntent()中获取Intent,如果未曾创建则需在onCreate()中获取. -->

@@ -32,7 +32,7 @@ public class ActivityAbout extends AppCompatActivity {
         //获取系统服务
         application = (MyApplication) getApplication();
 
-        Preferences preferences = RxDataStore.data(application.getPreferencesDataStore()).blockingFirst();
+        Preferences preferences = application.getPreferencesDataStore().data().blockingFirst();
         website = preferences.get(MyApplication.SETTING_WEBSITE);
         Integer versionCode = preferences.get(MyApplication.SETTING_VERSION_CODE);
 

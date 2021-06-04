@@ -11,13 +11,16 @@ import android.text.TextWatcher;
 import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.datastore.preferences.core.MutablePreferences;
 
 import java.io.File;
 
+import io.reactivex.rxjava3.core.Single;
 import red.lilu.app.databinding.ActivityOptionBinding;
 
 public class ActivityOption extends AppCompatActivity {
@@ -44,7 +47,9 @@ public class ActivityOption extends AppCompatActivity {
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
         id = getIntent().getStringExtra("id");
+
         b.textId.setText(id);
+
         qrcodePath = getExternalCacheDir() + "/qrcode.jpg";
         QcAPI.encode(
                 qrcodePath, id,
@@ -62,6 +67,14 @@ public class ActivityOption extends AppCompatActivity {
                     });
                 }
         );
+
+        b.switchRemoteControl.setChecked(
+                application.getPreferencesDataStore()
+                        .data()
+                        .blockingFirst()
+                        .get(MyApplication.SETTING_REMOTE_CONTROL_ENABLE)
+        );
+
         showOption();
 
         b.buttonIdCopy.setOnClickListener(v -> {
@@ -73,10 +86,27 @@ public class ActivityOption extends AppCompatActivity {
             );
             Toast.makeText(getApplicationContext(), "已经复制", Toast.LENGTH_SHORT).show();
         });
+
         b.buttonInfoEdit.setOnClickListener(v -> {
             Intent intent = new Intent(getApplicationContext(), ActivityInfoForm.class);
             startActivityForResult(intent, REQUEST_CODE_EDIT_INFO);
         });
+
+        b.switchRemoteControl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                application.getPreferencesDataStore().updateDataAsync(
+                        p -> {
+                            MutablePreferences mutablePreferences = p.toMutablePreferences();
+                            mutablePreferences.set(MyApplication.SETTING_REMOTE_CONTROL_ENABLE, isChecked);
+
+                            return Single.just(mutablePreferences);
+                        }
+                )
+                        .blockingSubscribe();
+            }
+        });
+
         b.buttonShareQrcode.setOnClickListener(v -> {
             MyApplication.fileShare(
                     this,
@@ -155,10 +185,6 @@ public class ActivityOption extends AppCompatActivity {
                         }
                 );
             }
-        });
-
-        b.buttonRemoteControl.setOnClickListener(v -> {
-            startActivity(new Intent(getApplicationContext(), ActivityRemoteControlOption.class));
         });
     }
 

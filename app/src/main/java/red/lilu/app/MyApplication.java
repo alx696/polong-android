@@ -37,7 +37,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.camera.camera2.Camera2Config;
 import androidx.camera.core.CameraXConfig;
 import androidx.core.content.FileProvider;
-import androidx.datastore.core.DataStore;
 import androidx.datastore.preferences.core.MutablePreferences;
 import androidx.datastore.preferences.core.Preferences;
 import androidx.datastore.preferences.core.PreferencesKeys;
@@ -74,22 +73,20 @@ public class MyApplication extends Application implements CameraXConfig.Provider
     private static final String T = "调试";
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private static final Gson gson = new Gson();
-    private static DataStore<Preferences> preferencesDataStore;
+    private static RxDataStore<Preferences> preferencesDataStore;
 
     public static final Preferences.Key<String> SETTING_WEBSITE = PreferencesKeys.stringKey("setting-website");
     public static final Preferences.Key<String> SETTING_STATISTICS_API = PreferencesKeys.stringKey("setting-statisticsAPI");
     public static final Preferences.Key<Integer> SETTING_VERSION_CODE = PreferencesKeys.intKey("setting-versionCode");
+    public static final Preferences.Key<Boolean> SETTING_REMOTE_CONTROL_ENABLE = PreferencesKeys.booleanKey("setting-remote_control-enable");
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         preferencesDataStore = new RxPreferenceDataStoreBuilder(getApplicationContext(), "settings").build();
-        Preferences preferences = RxDataStore.data(preferencesDataStore).blockingFirst();
-        if (preferences.get(MyApplication.SETTING_WEBSITE) == null) {
-            Log.i(T, "设置默认配置");
-            Single<Preferences> updateResult = RxDataStore.updateDataAsync(
-                    preferencesDataStore,
+        if (preferencesDataStore.data().blockingFirst().get(MyApplication.SETTING_WEBSITE) == null) {
+            preferencesDataStore.updateDataAsync(
                     p -> {
                         MutablePreferences mutablePreferences = p.toMutablePreferences();
 
@@ -99,12 +96,22 @@ public class MyApplication extends Application implements CameraXConfig.Provider
 
                         return Single.just(mutablePreferences);
                     }
-            );
-            updateResult.blockingSubscribe();
+            )
+                    .blockingSubscribe();
+        }
+        if (preferencesDataStore.data().blockingFirst().get(SETTING_REMOTE_CONTROL_ENABLE) == null) {
+            preferencesDataStore.updateDataAsync(p -> {
+                MutablePreferences mutablePreferences = p.toMutablePreferences();
+
+                mutablePreferences.set(SETTING_REMOTE_CONTROL_ENABLE, false);
+
+                return Single.just(mutablePreferences);
+            })
+                    .blockingSubscribe();
         }
     }
 
-    public DataStore<Preferences> getPreferencesDataStore() {
+    public RxDataStore<Preferences> getPreferencesDataStore() {
         return preferencesDataStore;
     }
 
@@ -212,11 +219,13 @@ public class MyApplication extends Application implements CameraXConfig.Provider
      * @return 是否
      */
     public boolean isServiceRunning(String fullClassName) {
+        Log.d(T, String.format("当前应用ID：%s，服务类名：%s", getPackageName(), fullClassName));
         boolean isRunning = false;
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningServiceInfo> runningServices = activityManager.getRunningServices(Integer.MAX_VALUE);
         for (ActivityManager.RunningServiceInfo rsi : runningServices) {
-            if (rsi.service.getClassName().equals(fullClassName)) {
+            if (rsi.service.getPackageName().equals(getPackageName()) &&
+                    rsi.service.getClassName().equals(fullClassName)) {
                 isRunning = true;
             }
         }
@@ -296,7 +305,7 @@ public class MyApplication extends Application implements CameraXConfig.Provider
      */
     public void statistics(int versionCode,
                            java.util.function.Consumer<String> onError) {
-        Preferences preferences = RxDataStore.data(getPreferencesDataStore()).blockingFirst();
+        Preferences preferences = preferencesDataStore.data().blockingFirst();
         String url = String.format(Locale.CHINA, "%s?package=%s&versionCode=%d", preferences.get(MyApplication.SETTING_STATISTICS_API), getPackageName(), versionCode);
         Log.d(T, "开始发送匿名统计信息（仅发送应用名称和版本）:" + url);
 
@@ -356,8 +365,7 @@ public class MyApplication extends Application implements CameraXConfig.Provider
                         String finalWebsite = website;
                         int finalVersionCode = versionCode;
                         String finalStatisticsAPI = statisticsAPI;
-                        Single<Preferences> updateResult = RxDataStore.updateDataAsync(
-                                preferencesDataStore,
+                        Single<Preferences> updateResult = preferencesDataStore.updateDataAsync(
                                 p -> {
                                     MutablePreferences mutablePreferences = p.toMutablePreferences();
 
