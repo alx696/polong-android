@@ -30,7 +30,7 @@ jobs:
           echo "Host *
             StrictHostKeyChecking no
             UserKnownHostsFile=/dev/null" | tee $HOME/.ssh/config
-          scp "$JKS_PATH" app/lilu.red.jks
+          scp $JKS_PATH app/lilu.red.jks
           rm $HOME/.ssh/id_ed25519
           sudo apt install -y wget
           wget https://github.com/alx696/polong-core/releases/download/${POLONG_CORE_VERSION}/polong-core.aar -O gomobile/polong-core.aar
