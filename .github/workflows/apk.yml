@@ -25,7 +25,7 @@ jobs:
           JKS_PATH: ${{ secrets.JKS_PATH }}
         run: |
           mkdir -p $HOME/.ssh
-          echo $SSH_PK | tee $HOME/.ssh/id_ed25519
+          echo "$SSH_PK" | tee $HOME/.ssh/id_ed25519
           chmod 400 $HOME/.ssh/id_ed25519
           echo "Host *
             StrictHostKeyChecking no
