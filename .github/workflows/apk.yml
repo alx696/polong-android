@@ -17,19 +17,20 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Prepare SSH and Get File
+      - name: Prepare SSH and Get Resource
         env:
           # ED25519 Private Key
-          SCP_PK: ${{ secrets.SCP_PK }}
-          SCP_PATH_JKS: ${{ secrets.SCP_PATH_JKS }}
+          ED25519: ${{ secrets.ED25519_ALIYUN }}
+          # jks path
+          JKS_PATH: ${{ secrets.JKS_PATH }}
         run: |
           mkdir -p $HOME/.ssh
-          echo "$SCP_PK" | tee $HOME/.ssh/id_ed25519
+          echo "$ED25519" | tee $HOME/.ssh/id_ed25519
           chmod 400 $HOME/.ssh/id_ed25519
           echo "Host *
             StrictHostKeyChecking no
             UserKnownHostsFile=/dev/null" | tee $HOME/.ssh/config
-          scp $SCP_PATH_JKS app/lilu.red.jks
+          scp "$JKS_PATH" app/lilu.red.jks
           rm $HOME/.ssh/id_ed25519
           sudo apt install -y wget
           wget https://github.com/alx696/polong-core/releases/download/${POLONG_CORE_VERSION}/polong-core.aar -O gomobile/polong-core.aar
@@ -40,10 +41,10 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Build
+      - name: Package
         env:
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.JKS_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.JKS_PASSWORD }}
         id: buildAllApks
         uses: eskatos/gradle-command-action@v1.3.3
         with:
@@ -53,7 +54,7 @@ jobs:
           configuration-cache-enabled: true
           arguments: assembleRelease
 
-      - name: Create release and upload assets
+      - name: Publish
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
