@@ -20,12 +20,12 @@ jobs:
       - name: Prepare SSH and Get Resource
         env:
           # ED25519 Private Key
-          ED25519: ${{ secrets.ED25519_ALIYUN }}
+          SSH_PK: ${{ secrets.ED25519_ALIYUN }}
           # jks path
           JKS_PATH: ${{ secrets.JKS_PATH }}
         run: |
           mkdir -p $HOME/.ssh
-          echo "$ED25519" | tee $HOME/.ssh/id_ed25519
+          echo $SSH_PK | tee $HOME/.ssh/id_ed25519
           chmod 400 $HOME/.ssh/id_ed25519
           echo "Host *
             StrictHostKeyChecking no
