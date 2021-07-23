@@ -43,7 +43,6 @@ import red.lilu.app.databinding.RecyclerViewChatMessageSelfBinding;
 
 public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<RecyclerViewAdapterChatMessage.ViewHolder> {
     private static final String T = "调试";
-    private final HashSet<String> imageExtensionSet = Sets.newHashSet("webp", "png", "jpg", "jpeg", "bmp");
     private final HashSet<String> videoExtensionSet = Sets.newHashSet("mp4");
     private static final ArrayList<KcAPI.ChatMessage> dataList = new ArrayList<>();
     private final MyApplication application;
@@ -57,7 +56,7 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
     interface Callback {
         void onRecyclerViewAdapterChatMessageCopyFileToPublicDownload(String filePath);
 
-        void onRecyclerViewAdapterChatMessageSend(String text, @Nullable MyApplication.FileInfo fileInfo);
+        void onRecyclerViewAdapterChatMessageSend(String text, @Nullable String path);
 
         void onRecyclerViewAdapterChatMessageDelete(long id);
     }
@@ -180,7 +179,11 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
             fileSizeView.setText(Tool.byteCountToDisplaySize(data.fileSize));
 
             // 文件路径
-            File dataFile = new File(KcAPI.getFileDirectory(application), String.format("%s.%s", data.fileNameWithoutExtension, data.fileExtension));
+            File directory = KcAPI.getFileDirectory(application);
+            if(!data.fileDirectory.isEmpty()) {
+                directory = new File(data.fileDirectory);
+            }
+            File dataFile = new File(directory, String.format("%s.%s", data.fileNameWithoutExtension, data.fileExtension));
             if (!dataFile.exists()) {
                 fileNameView.setTextColor(Color.rgb(200, 0, 0));
             } else {
@@ -189,7 +192,7 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
                 // 显示预览
                 if (data.state.equals("完成")) {
                     // 图片预览
-                    if (imageExtensionSet.contains(data.fileExtension.toLowerCase())) {
+                    if (MyApplication.imageExtensionSet.contains(data.fileExtension.toLowerCase())) {
                         showImagePreview(dataFile, h.imagePreview);
                     }
                     // TODO 存在OOM问题!
@@ -200,7 +203,7 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
                 }
 
                 h.layoutContent.setOnClickListener(v -> {
-                    if (imageExtensionSet.contains(data.fileExtension.toLowerCase())
+                    if (MyApplication.imageExtensionSet.contains(data.fileExtension.toLowerCase())
                             || videoExtensionSet.contains(data.fileExtension.toLowerCase())) {
                         onFileView.accept(
                                 dataFile.getAbsolutePath()
@@ -221,9 +224,7 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
                                 .setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                                     @Override
                                     public boolean onMenuItemClick(MenuItem item) {
-                                        String path = dataFile.getAbsolutePath();
-                                        MyApplication.FileInfo fileInfo = new MyApplication.FileInfo(path, dataFile.length(), Files.getNameWithoutExtension(path), Files.getFileExtension(dataFile.getName()));
-                                        callback.onRecyclerViewAdapterChatMessageSend("", fileInfo);
+                                        callback.onRecyclerViewAdapterChatMessageSend("", dataFile.getAbsolutePath());
 
                                         return true;
                                     }

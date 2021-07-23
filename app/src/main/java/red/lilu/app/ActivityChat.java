@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -29,9 +28,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.common.io.Files;
 import com.google.gson.reflect.TypeToken;
 
-import java.util.concurrent.CompletableFuture;
+import java.io.File;
 import java.util.function.Consumer;
 
 import red.lilu.app.databinding.ActivityChatBinding;
@@ -275,20 +275,12 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_FILE && resultCode == RESULT_OK) {
-            Uri fileUri = data.getData();
-            Log.d(T, "选择文件:" + fileUri.toString());
+            String paths = data.getStringExtra("paths");
+            Log.d(T, "选择文件:" + paths);
 
-            CompletableFuture.runAsync(() -> {
-                try {
-                    MyApplication.FileInfo fileInfo = application.fileFromUriToDir(fileUri, KcAPI.getFileDirectory(application));
-
-                    runOnUiThread(() -> {
-                        sendMessage("", fileInfo);
-                    });
-                } catch (Exception e) {
-                    Log.w(T, e);
-                }
-            }, application.getExecutorService());
+            for (String path : TextUtils.split(paths, ",")) {
+                sendMessage("", path);
+            }
         }
 
         if (requestCode == REQUEST_CODE_INFO && resultCode == RESULT_OK) {
@@ -344,8 +336,8 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
     }
 
     @Override
-    public void onRecyclerViewAdapterChatMessageSend(String text, MyApplication.FileInfo fileInfo) {
-        sendMessage(text, fileInfo);
+    public void onRecyclerViewAdapterChatMessageSend(String text, String path) {
+        sendMessage(text, path);
     }
 
     @Override
@@ -362,7 +354,7 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         );
     }
 
-    void sendMessage(String text, MyApplication.FileInfo fileInfo) {
+    void sendMessage(String text, String path) {
         java.util.function.Consumer<String> onDone = result -> {
             runOnUiThread(() -> {
                 b.textLayoutText.getEditText().setText("");
@@ -377,10 +369,15 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
                     onError,
                     onDone
             );
-        } else if (fileInfo != null) {
+        } else if (!path.isEmpty()) {
+            File file = new File(path);
+
             KcAPI.sendChatMessageFile(
                     targetContact.id,
-                    fileInfo,
+                    Files.getNameWithoutExtension(file.getName()),
+                    Files.getFileExtension(file.getName()),
+                    file.getParentFile().getAbsolutePath(),
+                    file.length(),
                     application,
                     onError,
                     onDone
@@ -390,13 +387,18 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
 
     void copyFileToPublicDownload() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getApplicationContext(), "没有存储权限！", Toast.LENGTH_LONG).show();
             return;
         }
+
         MyApplication.fileCopyToDownload(
                 this,
                 copyToPublicDownloadFilePath,
                 application,
                 error -> {
+                    runOnUiThread(() -> {
+                        Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                    });
                 },
                 done -> {
                     runOnUiThread(() -> {
@@ -432,10 +434,7 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
             sendMessage(text, null);
         });
         b.buttonFile.setOnClickListener(v -> {
-            // https://developer.android.com/training/data-storage/shared/documents-files#open-file
-            Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-            fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
-            fileIntent.setType("*/*");
+            Intent fileIntent = new Intent(getApplicationContext(), ActivityFileChoose.class);
             startActivityForResult(fileIntent, REQUEST_CODE_FILE);
         });
 

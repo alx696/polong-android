@@ -538,7 +538,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     }
 
     private void handleRemoteTask(KcAPI.ChatMessage chatMessage) {
-        if (!chatMessage.text.equals("daka") && !chatMessage.fromPeerID.equals(kcID)) {
+        if (!chatMessage.text.equals("daka") || chatMessage.fromPeerID.equals(kcID)) {
             return;
         }
 

@@ -46,6 +46,7 @@ public class KcAPI {
         long fileSize;
         String fileNameWithoutExtension;
         String fileExtension;
+        String fileDirectory;
         String state;
         boolean read;
     }
@@ -253,13 +254,13 @@ public class KcAPI {
     /**
      * 发送会话消息文件
      */
-    public static void sendChatMessageFile(String peerID, MyApplication.FileInfo fileInfo,
+    public static void sendChatMessageFile(String peerID, String nameWithoutExtension, String extension, String directory, long size,
                                            MyApplication myApplication,
                                            java.util.function.Consumer<String> onError,
                                            java.util.function.Consumer<String> onDone) {
         CompletableFuture.runAsync(() -> {
             try {
-                Kc.sendChatMessageFile(peerID, fileInfo.nameWithoutExtension, fileInfo.extension, fileInfo.size);
+                Kc.sendChatMessageFile(peerID, nameWithoutExtension, extension, directory, size);
 
                 onDone.accept("");
             } catch (Exception e) {

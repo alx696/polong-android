@@ -2,6 +2,7 @@ package red.lilu.app;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,8 +17,11 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
 import red.lilu.app.databinding.ActivityInfoFromBinding;
@@ -113,19 +117,16 @@ public class ActivityInfoForm extends AppCompatActivity {
                 },
                 option -> {
                     if (!option.name.isEmpty()) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                b.textLayoutName.getEditText().setText(option.name);
+                        runOnUiThread(() -> {
+                            b.textLayoutName.getEditText().setText(option.name);
 
-                                photoBase64 = option.photo;
-                                GlideApp.with(getApplicationContext())
-                                        .load(
-                                                Base64.decode(photoBase64, Base64.NO_WRAP)
-                                        )
-                                        .circleCrop()
-                                        .into(b.imagePhoto);
-                            }
+                            photoBase64 = option.photo;
+                            GlideApp.with(getApplicationContext())
+                                    .load(
+                                            Base64.decode(photoBase64, Base64.NO_WRAP)
+                                    )
+                                    .circleCrop()
+                                    .into(b.imagePhoto);
                         });
                     }
                 }
@@ -154,16 +155,24 @@ public class ActivityInfoForm extends AppCompatActivity {
             b.progressPhoto.setVisibility(View.VISIBLE);
             CompletableFuture.runAsync(() -> {
                 try {
-                    MyApplication.FileInfo uriFileInfo = application.fileFromUriToDir(fileUri, getExternalCacheDir());
-                    Bitmap bitmap = MyApplication.fileScaleBitmapFromFile(uriFileInfo.path, 256, 256);
+                    InputStream inputStream = getContentResolver().openInputStream(fileUri);
+                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(
+                            bitmap,
+                            256,
+                            256,
+                            false
+                    );
+                    bitmap.recycle();
+                    inputStream.close();
+
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
+                    scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
                     photoBase64 = new String(
                             Base64.encode(bos.toByteArray(), Base64.NO_WRAP)
                     );
-                    bitmap.recycle();
+                    scaledBitmap.recycle();
                     bos.close();
-                    new File(uriFileInfo.path).delete();
 
                     // 更新
                     runOnUiThread(() -> {

@@ -62,7 +62,7 @@
 
         <!-- single启动模式时,如果已经创建则需在onNewIntent()中获取Intent,如果未曾创建则需在onCreate()中获取. -->
         <activity
-            android:name="red.lilu.app.ActivityMain"
+            android:name=".ActivityMain"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -71,38 +71,39 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="red.lilu.app.ActivityAbout"
+            android:name=".ActivityAbout"
             android:theme="@style/MyTheme.Dialog" />
         <activity
-            android:name="red.lilu.app.ActivityAlert"
+            android:name=".ActivityAlert"
             android:theme="@style/MyTheme.Dialog" />
         <activity
-            android:name="red.lilu.app.ActivityInfoForm"
+            android:name=".ActivityInfoForm"
             android:theme="@style/MyTheme.Dialog" />
         <activity
-            android:name="red.lilu.app.ActivityEditText"
+            android:name=".ActivityEditText"
             android:windowSoftInputMode="stateAlwaysVisible" />
         <activity android:name=".ActivityRemoteControlTaskDo" />
         <activity
-            android:name="red.lilu.app.ActivityOption"
-            android:parentActivityName="red.lilu.app.ActivityMain" />
+            android:name=".ActivityOption"
+            android:parentActivityName=".ActivityMain" />
         <activity
-            android:name="red.lilu.app.ActivityRemoteControlOption"
-            android:parentActivityName="red.lilu.app.ActivityOption" />
+            android:name=".ActivityRemoteControlOption"
+            android:parentActivityName=".ActivityOption" />
         <activity
-            android:name="red.lilu.app.ActivityAdd"
-            android:parentActivityName="red.lilu.app.ActivityMain" />
+            android:name=".ActivityAdd"
+            android:parentActivityName=".ActivityMain" />
         <activity
-            android:name="red.lilu.app.ActivityQrCode"
-            android:parentActivityName="red.lilu.app.ActivityAdd" />
+            android:name=".ActivityQrCode"
+            android:parentActivityName=".ActivityAdd" />
         <activity
-            android:name="red.lilu.app.ActivityChat"
-            android:parentActivityName="red.lilu.app.ActivityMain" />
+            android:name=".ActivityChat"
+            android:parentActivityName=".ActivityMain" />
         <activity
-            android:name="red.lilu.app.ActivityTargetInfo"
-            android:parentActivityName="red.lilu.app.ActivityChat" />
+            android:name=".ActivityTargetInfo"
+            android:parentActivityName=".ActivityChat" />
         <activity android:name=".ActivityRemoteControlView" />
         <activity android:name=".ActivityRemoteControlAsk" />
+        <activity android:name=".ActivityFileChoose" />
     </application>
 
 </manifest>
