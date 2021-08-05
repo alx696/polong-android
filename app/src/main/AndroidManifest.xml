@@ -14,6 +14,9 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
 
     <uses-feature android:name="android.hardware.camera.any" />
 
@@ -95,6 +98,7 @@
         <activity
             android:name=".ActivityQrCode"
             android:parentActivityName=".ActivityAdd" />
+        <activity android:name=".ActivityFileChoose" />
         <activity
             android:name=".ActivityChat"
             android:parentActivityName=".ActivityMain" />
@@ -103,7 +107,6 @@
             android:parentActivityName=".ActivityChat" />
         <activity android:name=".ActivityRemoteControlView" />
         <activity android:name=".ActivityRemoteControlAsk" />
-        <activity android:name=".ActivityFileChoose" />
     </application>
 
 </manifest>
