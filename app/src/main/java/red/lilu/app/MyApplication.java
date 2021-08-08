@@ -271,19 +271,19 @@ public class MyApplication extends Application {
                         int versionCode = 0;
                         String statisticsAPI = "";
                         for (String txt : list) {
-                            Log.d(T, txt);
+//                            Log.d(T, txt);
 
                             if (txt.startsWith("[site]")) {
                                 website = txt.replaceFirst(Pattern.quote("[site]"), "");
-                                Log.d(T, "DNS中网站:" + website);
+//                                Log.d(T, "DNS中网站:" + website);
                             } else if (txt.startsWith("[code]")) {
                                 versionCode = Integer.parseInt(
                                         txt.replaceFirst(Pattern.quote("[code]"), "")
                                 );
-                                Log.d(T, "DNS中版本编号:" + versionCode);
+//                                Log.d(T, "DNS中版本编号:" + versionCode);
                             } else if (txt.startsWith("[sapi]")) {
                                 statisticsAPI = txt.replaceFirst(Pattern.quote("[sapi]"), "");
-                                Log.d(T, "DNS中统计接口:" + statisticsAPI);
+//                                Log.d(T, "DNS中统计接口:" + statisticsAPI);
                             }
                         }
 

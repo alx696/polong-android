@@ -376,7 +376,7 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
     class LocalBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(T, "服务收到广播:" + intent.getAction());
+//            Log.d(T, "服务收到广播:" + intent.getAction());
             switch (intent.getAction()) {
                 case "ui":
                     if (intent.hasExtra("main")) {
