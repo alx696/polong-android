@@ -46,6 +46,10 @@ android {
             signingConfig signingConfigs.lilu
         }
     }
+    lintOptions {
+        // 忽略目标版本过低问题
+        checkReleaseBuilds false
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
