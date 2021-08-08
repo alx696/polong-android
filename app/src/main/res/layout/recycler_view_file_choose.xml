@@ -39,9 +39,16 @@
             tools:text="信息" />
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/image_check"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@drawable/ic_check_box_outline" />
+    <FrameLayout
+        android:id="@+id/layout_check"
+        android:layout_width="48dp"
+        android:layout_height="48dp">
+
+        <ImageView
+            android:id="@+id/image_check"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_check_box_outline" />
+    </FrameLayout>
 </LinearLayout>

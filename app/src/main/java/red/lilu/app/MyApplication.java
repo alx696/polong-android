@@ -40,6 +40,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 import io.reactivex.rxjava3.core.Single;
 
 public class MyApplication extends Application {
@@ -377,7 +379,8 @@ public class MyApplication extends Application {
     /**
      * 查看文件
      */
-    public static void fileView(FragmentActivity activity, String path, java.util.function.Consumer<String> onError) {
+    public static void fileView(FragmentActivity activity, String path, @Nullable String title,
+                                java.util.function.Consumer<String> onError) {
         Log.d(T, "查看文件:" + path);
         File file = new File(path);
 
@@ -398,7 +401,7 @@ public class MyApplication extends Application {
 
         // 接着, 设置内容
         String mimeType = activity.getContentResolver().getType(uri);
-        Log.d(T, "文件类型:" + mimeType);
+        Log.d(T, "查看文件类型:" + mimeType);
         if (mimeType != null) {
             intent.setDataAndType(uri, mimeType);
         } else {
@@ -409,20 +412,24 @@ public class MyApplication extends Application {
         // https://developer.android.com/guide/components/intents-filters#imatch
         ComponentName resolveActivity = intent.resolveActivity(activity.getPackageManager());
         if (resolveActivity == null) {
-            Log.w(T, "没有处理此文件的应用!");
-            onError.accept("没有处理此文件的应用!");
+            Log.w(T, "没有能够查看此文件的应用!");
+            onError.accept("没有能够查看此文件的应用!");
+            return;
         }
+        Log.d(T, "查看此文件的默认应用:" + resolveActivity.getClassName());
 
-        Log.d(T, "可以处理此文件的默认应用:" + resolveActivity.getClassName());
-
-        try {
+        if (title != null) {
             // 强制选择
-            activity.startActivity(
-                    Intent.createChooser(intent, "选择查看方式")
-            );
-        } catch (Exception e) {
-            Log.w(T, e);
-            onError.accept(e.getMessage());
+            try {
+                activity.startActivity(
+                        Intent.createChooser(intent, title)
+                );
+            } catch (Exception e) {
+                Log.w(T, e);
+                onError.accept(e.getMessage());
+            }
+        } else {
+            activity.startActivity(intent);
         }
     }
 

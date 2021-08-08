@@ -145,6 +145,7 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
                         MyApplication.fileView(
                                 this,
                                 filepath,
+                                null,
                                 error -> {
                                 }
                         );
@@ -275,12 +276,10 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_FILE && resultCode == RESULT_OK) {
-            String paths = data.getStringExtra("paths");
-            Log.d(T, "选择文件:" + paths);
+            String path = data.getStringExtra("path");
+            Log.d(T, "选择文件:" + path);
 
-            for (String path : TextUtils.split(paths, ",")) {
-                sendMessage("", path);
-            }
+            sendMessage("", path);
         }
 
         if (requestCode == REQUEST_CODE_INFO && resultCode == RESULT_OK) {
