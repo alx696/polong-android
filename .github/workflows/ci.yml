@@ -58,11 +58,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          sudo apt install -y jq
+          sudo apt-get install -y jq
+          GIT_TAG=`echo $GITHUB_REF | sed 's/refs\/tags\///'`
           upload_url=`curl \
+          -X POST \
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest \
+          https://api.github.com/repos/${GITHUB_REPOSITORY}/releases \
+          -d '{"tag_name":"'${GIT_TAG}'"}'
           | jq --raw-output '.upload_url' \
           | sed 's/{?name,label}/?name/'`
           curl \
