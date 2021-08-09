@@ -9,6 +9,9 @@ android {
         versionCode 101
         versionName '1.0.1'
     }
+    buildFeatures {
+        viewBinding true
+    }
     def KeyPassword = System.getenv('ANDROID_KEY_PASSWORD')
     if (KeyPassword == null) {
         KeyPassword = '123456'
@@ -24,9 +27,6 @@ android {
             storeFile file('lilu.red.jks')
             storePassword "$StorePassword"
         }
-    }
-    buildFeatures {
-        viewBinding true
     }
     buildTypes {
         release {
