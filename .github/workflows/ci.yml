@@ -58,11 +58,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          apt install -y jq
+          sudo apt install -y jq
           upload_url=`curl \
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/alx696/polong-android/releases/latest \
+          https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest \
           | jq --raw-output '.upload_url' \
           | sed 's/{?name,label}/?name/'`
           curl \
