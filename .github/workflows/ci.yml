@@ -54,10 +54,20 @@ jobs:
           configuration-cache-enabled: true
           arguments: assembleRelease
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Upload
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        with:
-          files: 'app/build/outputs/apk/release/*.apk'
+        run: |
+          apt install -y jq
+          upload_url=`curl \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/alx696/polong-android/releases/latest \
+          | jq --raw-output '.upload_url' \
+          | sed 's/{?name,label}/?name/'`
+          curl \
+          -X POST \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -F 'file=@app/build/outputs/apk/release/polong.apk' \
+          ${upload_url}=android.apk
