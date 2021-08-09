@@ -38,7 +38,7 @@ android {
             android.applicationVariants.all {
                 variant ->
                     variant.outputs.all {
-                        outputFileName = "polong.apk"
+                        outputFileName = "android.apk"
                     }
             }
         }

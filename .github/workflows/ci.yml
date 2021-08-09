@@ -72,5 +72,5 @@ jobs:
           -X POST \
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
-          -F 'file=@app/build/outputs/apk/release/polong.apk' \
+          -F 'file=@app/build/outputs/apk/release/android.apk' \
           ${upload_url}=android.apk
