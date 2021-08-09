@@ -276,10 +276,10 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_FILE && resultCode == RESULT_OK) {
-            String path = data.getStringExtra("path");
-            Log.d(T, "选择文件:" + path);
-
-            sendMessage("", path);
+            String[] paths = data.getStringArrayExtra("paths");
+            for (String path : paths) {
+                sendMessage("", path);
+            }
         }
 
         if (requestCode == REQUEST_CODE_INFO && resultCode == RESULT_OK) {

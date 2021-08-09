@@ -7,9 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,6 +42,11 @@ import java.util.Locale;
 import red.lilu.app.databinding.ActivityFileChooseBinding;
 import red.lilu.app.databinding.RecyclerViewFileChooseBinding;
 
+/**
+ * 选择文件
+ * <p>如需单选设置Intent参数 <code>intent.putExtra("single", true);</code></p>
+ * <p>通过ActivityResult返回所选文件路径，单选时<code>getStringExtra("path")</code>，多选时<code>getStringArrayExtra("paths")</code></p>
+ */
 public class ActivityFileChoose extends AppCompatActivity {
 
     private static final String T = "调试";
@@ -53,6 +56,7 @@ public class ActivityFileChoose extends AppCompatActivity {
     private ActivityFileChooseBinding b;
     private static MyApplication application;
     private static RecyclerViewAdapterMy adapter;
+    private boolean single; // 是否单选
     private File dir; // 当前目录
 
     @Override
@@ -76,6 +80,10 @@ public class ActivityFileChoose extends AppCompatActivity {
         b.recycler.addItemDecoration(itemDecoration);
         adapter = new RecyclerViewAdapterMy();
         b.recycler.setAdapter(adapter);
+
+        //获取参数
+        single = getIntent().getBooleanExtra("single", false);
+        Log.i(T, "是否单选:" + single);
 
         // 申请所有文件权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
@@ -257,8 +265,16 @@ public class ActivityFileChoose extends AppCompatActivity {
                         set.remove(data.path);
                         h.b.imageCheck.setImageResource(R.drawable.ic_check_box_outline);
                     } else {
+                        if (single) {
+                            set.clear();
+                        }
+
                         set.add(data.path);
                         h.b.imageCheck.setImageResource(R.drawable.ic_check_box);
+                    }
+
+                    if (single) {
+                        notifyDataSetChanged();
                     }
                 });
             } else {
@@ -408,7 +424,7 @@ public class ActivityFileChoose extends AppCompatActivity {
         if (checkSet.size() == 0) {
             new MaterialAlertDialogBuilder(ActivityFileChoose.this)
                     .setTitle("没有选择")
-                    .setMessage("没有选择任何文件夹")
+                    .setMessage("没有选择任何文件")
                     .setNegativeButton("关闭", (dialog, which) -> {
                         dialog.cancel();
                     })
@@ -416,11 +432,16 @@ public class ActivityFileChoose extends AppCompatActivity {
 
             return;
         }
+        Log.i(T, "选择文件: " + application.getGson().toJson(checkSet));
 
-        String path = checkSet.iterator().next();
-        Log.i(T, "选择文件夹: " + path);
         Intent intent = new Intent();
-        intent.putExtra("path", path);
+
+        if (single) {
+            intent.putExtra("path", checkSet.iterator().next());
+        } else {
+            intent.putExtra("paths", checkSet.toArray(new String[0]));
+        }
+
         setResult(
                 RESULT_OK,
                 intent
