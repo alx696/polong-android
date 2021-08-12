@@ -69,8 +69,13 @@
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*"/>
             </intent-filter>
         </activity>
         <activity
@@ -105,6 +110,9 @@
         <activity
             android:name=".ActivityTargetInfo"
             android:parentActivityName=".ActivityChat" />
+        <activity
+            android:name=".ActivityShare"
+            android:theme="@style/MyTheme.Dialog" />
         <activity android:name=".ActivityRemoteControlView" />
         <activity android:name=".ActivityRemoteControlAsk" />
     </application>

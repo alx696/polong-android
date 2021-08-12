@@ -3,13 +3,16 @@ package red.lilu.app;
 import android.Manifest;
 import android.app.Application;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.PowerManager;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,6 +34,9 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -331,6 +337,64 @@ public class MyApplication extends Application {
             );
         } catch (Exception e) {
             Log.w(T, "获取版本失败");
+        }
+    }
+
+    /**
+     * 当文件源是URI时使用不便, 故将其复制到可控文件夹中.
+     */
+    public void uriToDir(Uri uri, File dir,
+                         java.util.function.Consumer<File> onDone,
+                         java.util.function.Consumer<String> onError) {
+        ContentResolver contentResolver = getContentResolver();
+        String name = "";
+        try (Cursor cursor = contentResolver.query(uri, null, null, null, null, null)) {
+            if (cursor == null) {
+                onError.accept("无法查询URI信息");
+                return;
+            }
+
+            int columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            if (columnIndex < 0) {
+                onError.accept("无法获取名称索引");
+                return;
+            }
+
+            if (cursor.moveToFirst()) {
+                name = cursor.getString(columnIndex);
+            }
+        }
+
+        if (name.isEmpty()) {
+            onError.accept("无法获取文件名称");
+            return;
+        }
+
+        // 防止文件重复
+        if (new File(dir, name).exists()) {
+            String fileExtension = Files.getFileExtension(name);
+            if (!fileExtension.isEmpty()) {
+                fileExtension = "." + fileExtension;
+            }
+            name = String.format("%s[%s]%s", Files.getNameWithoutExtension(name), System.currentTimeMillis(), fileExtension);
+        }
+
+        // 复制文件
+        File outputFile = new File(dir, name);
+        try (
+                InputStream inputStream = contentResolver.openInputStream(uri);
+                FileOutputStream outputStream = new FileOutputStream(outputFile)
+        ) {
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            onDone.accept(outputFile);
+        } catch (IOException e) {
+            Log.w(T, e);
+            onError.accept(e.getMessage());
         }
     }
 

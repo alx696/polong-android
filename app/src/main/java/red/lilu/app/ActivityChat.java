@@ -9,16 +9,18 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -26,6 +28,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.io.Files;
@@ -53,51 +56,6 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
     private KcAPI.Contact targetContact;
     private Bitmap myPhotoBitmap, targetPhotoBitmap;
     private String copyToPublicDownloadFilePath;
-
-    class LocalBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-//            Log.d(T, "会话界面收到广播:" + intent.getAction());
-            switch (intent.getAction()) {
-                case "push":
-                    String type = intent.getStringExtra("type");
-
-                    if (type.equals("ContactDelete") && intent.getStringExtra("id").equals(targetID)) {
-                        finish();
-                    }
-
-                    if (type.equals("ChatMessage")) {
-                        String peerID = intent.getStringExtra("peerID");
-                        if (!peerID.equals(myID) && !peerID.equals(targetContact.id)) {
-                            return;
-                        }
-
-                        KcAPI.ChatMessage data = application.getGson().fromJson(
-                                intent.getStringExtra("json"),
-                                new TypeToken<KcAPI.ChatMessage>() {
-                                }.getType()
-                        );
-                        adapter.add(data);
-                        layoutManager.scrollToPosition(
-                                adapter.getItemCount() - 1
-                        );
-                    }
-
-                    if (type.equals("ChatMessageState")) {
-                        String peerID = intent.getStringExtra("peerID");
-                        if (!peerID.equals(myID) && !peerID.equals(targetContact.id)) {
-                            return;
-                        }
-
-                        long messageID = intent.getLongExtra("messageID", 0);
-                        String state = intent.getStringExtra("state");
-                        adapter.updateState(messageID, state);
-                    }
-
-                    break;
-            }
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,7 +141,7 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
                                         targetPhotoBitmap = BitmapFactory.decodeByteArray(targetPhotoData, 0, targetPhotoData.length);
                                     }
 
-                                    initMessage();
+                                    init();
                                 });
                             }
                     );
@@ -353,7 +311,64 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         );
     }
 
-    void sendMessage(String text, String path) {
+    class LocalBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+//            Log.d(T, "会话界面收到广播:" + intent.getAction());
+            switch (intent.getAction()) {
+                case "push":
+                    String type = intent.getStringExtra("type");
+
+                    if (type.equals("ContactDelete") && intent.getStringExtra("id").equals(targetID)) {
+                        finish();
+                    }
+
+                    if (type.equals("ChatMessage")) {
+                        String peerID = intent.getStringExtra("peerID");
+                        if (!peerID.equals(myID) && !peerID.equals(targetContact.id)) {
+                            return;
+                        }
+
+                        KcAPI.ChatMessage data = application.getGson().fromJson(
+                                intent.getStringExtra("json"),
+                                new TypeToken<KcAPI.ChatMessage>() {
+                                }.getType()
+                        );
+                        adapter.add(data);
+                        layoutManager.scrollToPosition(
+                                adapter.getItemCount() - 1
+                        );
+                    }
+
+                    if (type.equals("ChatMessageState")) {
+                        String peerID = intent.getStringExtra("peerID");
+                        if (!peerID.equals(myID) && !peerID.equals(targetContact.id)) {
+                            return;
+                        }
+
+                        long messageID = intent.getLongExtra("messageID", 0);
+                        String state = intent.getStringExtra("state");
+                        adapter.updateState(messageID, state);
+                    }
+
+                    break;
+            }
+        }
+    }
+
+    private AlertDialog alertWait(String text) {
+        AlertDialog alertDialog = new MaterialAlertDialogBuilder(ActivityChat.this)
+                .setCancelable(false)
+                .setView(R.layout.dialog_wait) // 嵌入视图
+                .show();
+
+        TextView text_tips = alertDialog.findViewById(R.id.text_tips);
+        text_tips.setText(text);
+
+        return alertDialog;
+    }
+
+    private void sendMessage(String text, String path) {
         java.util.function.Consumer<String> onDone = result -> {
             runOnUiThread(() -> {
                 b.textLayoutText.getEditText().setText("");
@@ -384,45 +399,33 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         }
     }
 
-    void copyFileToPublicDownload() {
+    private void copyFileToPublicDownload() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getApplicationContext(), "没有存储权限！", Toast.LENGTH_LONG).show();
             return;
         }
 
+        AlertDialog waitDialog = alertWait("正在复制");
         MyApplication.fileCopyToDownload(
                 this,
                 copyToPublicDownloadFilePath,
                 application,
                 error -> {
                     runOnUiThread(() -> {
+                        waitDialog.cancel();
                         Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
                     });
                 },
                 done -> {
                     runOnUiThread(() -> {
+                        waitDialog.cancel();
                         Toast.makeText(getApplicationContext(), "已经复制", Toast.LENGTH_SHORT).show();
                     });
                 }
         );
     }
 
-    void initMessage() {
-        // 加载数据
-        KcAPI.findChatMessage(
-                targetContact.id,
-                application,
-                onError,
-                result -> {
-                    runOnUiThread(() -> {
-                        adapter.set(myID, myPhotoBitmap, targetPhotoBitmap, result);
-                        layoutManager.scrollToPosition(
-                                adapter.getItemCount() - 1
-                        );
-                    });
-                }
-        );
-
+    private void ready() {
         // 绑定功能
         b.buttonSend.setOnClickListener(v -> {
             String text = b.textLayoutText.getEditText().getText().toString();
@@ -443,6 +446,49 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
         broadcastManager.registerReceiver(
                 localBroadcastReceiver,
                 broadcastIntentFilter
+        );
+
+        // 处理分享
+        if (getIntent().getParcelableExtra("uri") != null) {
+            Uri uri = getIntent().getParcelableExtra("uri");
+            Log.i(T, "分享文件:" + uri);
+
+            AlertDialog waitDialog = alertWait("正在准备");
+            application.uriToDir(
+                    uri,
+                    getExternalCacheDir(),
+                    file -> {
+                        waitDialog.cancel();
+                        runOnUiThread(() -> {
+                            sendMessage("", file.getAbsolutePath());
+                        });
+                    },
+                    error -> {
+                        runOnUiThread(() -> {
+                            waitDialog.cancel();
+                            Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                        });
+                    }
+            );
+        }
+    }
+
+    private void init() {
+        // 加载数据
+        KcAPI.findChatMessage(
+                targetContact.id,
+                application,
+                onError,
+                result -> {
+                    runOnUiThread(() -> {
+                        adapter.set(myID, myPhotoBitmap, targetPhotoBitmap, result);
+                        layoutManager.scrollToPosition(
+                                adapter.getItemCount() - 1
+                        );
+
+                        ready();
+                    });
+                }
         );
     }
 

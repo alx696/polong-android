@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -215,7 +216,24 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
             switch (intent.getAction()) {
                 case "kcID":
                     kcID = intent.getStringExtra("data");
-                    nodeReady();
+
+                    // 检查我的信息是否设置
+                    KcAPI.getOption(
+                            application,
+                            error -> {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
+                                    finish();
+                                });
+                            },
+                            myInfo -> {
+                                if (myInfo.name.isEmpty()) {
+                                    runOnUiThread(() -> startActivity(new Intent(getApplicationContext(), ActivityInfoForm.class)));
+                                } else {
+                                    nodeReady();
+                                }
+                            }
+                    );
 
                     break;
                 case "push":
@@ -291,26 +309,16 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
     private void nodeReady() {
         reloadContactList();
 
-        // 检查我的信息是否设置
-        KcAPI.getOption(
-                application,
-                error -> {
-                    runOnUiThread(() -> {
-                        Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
-                        finish();
-                    });
-                },
-                myInfo -> {
-                    if (myInfo.name.isEmpty()) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                startActivity(new Intent(getApplicationContext(), ActivityInfoForm.class));
-                            }
-                        });
-                    }
-                }
-        );
+        // 处理文件分享
+        if (getIntent().getParcelableExtra(Intent.EXTRA_STREAM) != null) {
+            Uri fileUri = getIntent().getParcelableExtra(Intent.EXTRA_STREAM);
+            Log.i(T, "收到文件分享:" + fileUri);
+
+            Intent intent = new Intent(getApplicationContext(), ActivityShare.class);
+            intent.putExtra("myID", kcID);
+            intent.putExtra("uri", fileUri);
+            startActivity(intent);
+        }
     }
 
     private void init() {
