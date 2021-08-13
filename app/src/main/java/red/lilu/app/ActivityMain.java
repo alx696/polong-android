@@ -1,14 +1,11 @@
 package red.lilu.app;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -16,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -36,8 +32,7 @@ import red.lilu.app.databinding.ActivityMainBinding;
 public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapterContact.Callback {
 
     private static final String T = "调试";
-    private static final int REQUEST_CODE_PERMISSION = 1;
-    private static final int REQUEST_CODE_IGNORE_BATTERY_OPTIMIZATIONS = 2;
+    private static final int REQUEST_CODE_IGNORE_BATTERY_OPTIMIZATIONS = 1;
     private static final int REQUEST_CODE_ADD = 10;
     private static final int REQUEST_CODE_OPTION = 11;
     private ActivityMainBinding b;
@@ -82,7 +77,7 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
                 broadcastIntentFilter
         );
 
-        checkPermission();
+        checkBackground();
 
         if (getIntent().getStringExtra("remote_control_close") != null) {
             Log.i(T, "发送停止远程控制广播");
@@ -150,24 +145,6 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_CODE_PERMISSION) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                checkBackground();
-            } else {
-                new MaterialAlertDialogBuilder(ActivityMain.this)
-                        .setTitle("信任危机")
-                        .setMessage("即如此，那再见！")
-                        .setPositiveButton("已读", (dialog, which) -> {
-                            finish();
-                        })
-                        .show();
-            }
-        }
     }
 
     @Override
@@ -354,17 +331,6 @@ public class ActivityMain extends AppCompatActivity implements RecyclerViewAdapt
             startActivityForResult(backgroundIntent, REQUEST_CODE_IGNORE_BATTERY_OPTIMIZATIONS);
         } else {
             init();
-        }
-    }
-
-    private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_CODE_PERMISSION
-            );
-        } else {
-            checkBackground();
         }
     }
 
