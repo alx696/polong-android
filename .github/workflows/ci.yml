@@ -9,7 +9,7 @@ jobs:
   build:
     env:
       # https://github.com/alx696/polong-core/releases
-      POLONG_CORE_VERSION: v1.0.1
+      POLONG_CORE_VERSION: v1.0.0
 
     runs-on: ubuntu-latest
 
