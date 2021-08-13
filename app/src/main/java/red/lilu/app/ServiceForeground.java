@@ -464,8 +464,8 @@ public class ServiceForeground extends Service implements kc.FeedCallback {
         }
 
         String mContent = m.text;
-        if (m.fileSize > 0) {
-            mContent = String.format("[文件] %s.%s", m.fileNameWithoutExtension, m.fileExtension);
+        if (m.file_size > 0) {
+            mContent = String.format("[文件] %s", m.file_name);
         }
         KcAPI.Contact contact = contactMap.get(m.fromPeerID);
         String contactName = contact.nameRemark.isEmpty() ? contact.name : contact.nameRemark;

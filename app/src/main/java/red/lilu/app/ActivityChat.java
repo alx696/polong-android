@@ -388,9 +388,9 @@ public class ActivityChat extends AppCompatActivity implements RecyclerViewAdapt
 
             KcAPI.sendChatMessageFile(
                     targetContact.id,
-                    Files.getNameWithoutExtension(file.getName()),
+                    file.getAbsolutePath(),
+                    file.getName(),
                     Files.getFileExtension(file.getName()),
-                    file.getParentFile().getAbsolutePath(),
                     file.length(),
                     application,
                     onError,

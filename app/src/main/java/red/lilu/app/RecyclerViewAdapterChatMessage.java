@@ -171,19 +171,15 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
         h.imagePreview.setVisibility(View.GONE);
         h.videoPreview.setVisibility(View.GONE);
         h.videoPreview.setPlayer(null);
-        if (data.fileSize > 0) {
+        if (data.file_size > 0) {
             h.layoutFile.setVisibility(View.VISIBLE);
             TextView fileNameView = h.layoutFile.findViewById(R.id.text_file_name);
             TextView fileSizeView = h.layoutFile.findViewById(R.id.text_file_size);
-            fileNameView.setText(String.format("%s.%s", data.fileNameWithoutExtension, data.fileExtension));
-            fileSizeView.setText(Tool.byteCountToDisplaySize(data.fileSize));
+            fileNameView.setText(data.file_name);
+            fileSizeView.setText(Tool.byteCountToDisplaySize(data.file_size));
 
             // 文件路径
-            File directory = KcAPI.getFileDirectory(application);
-            if(!data.fileDirectory.isEmpty()) {
-                directory = new File(data.fileDirectory);
-            }
-            File dataFile = new File(directory, String.format("%s.%s", data.fileNameWithoutExtension, data.fileExtension));
+            File dataFile = new File(data.file_path);
             if (!dataFile.exists()) {
                 fileNameView.setTextColor(Color.rgb(200, 0, 0));
             } else {
@@ -192,7 +188,7 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
                 // 显示预览
                 if (data.state.equals("完成")) {
                     // 图片预览
-                    if (MyApplication.imageExtensionSet.contains(data.fileExtension.toLowerCase())) {
+                    if (MyApplication.imageExtensionSet.contains(data.file_extension.toLowerCase())) {
                         showImagePreview(dataFile, h.imagePreview);
                     }
                     // TODO 存在OOM问题!
@@ -203,8 +199,8 @@ public class RecyclerViewAdapterChatMessage extends RecyclerView.Adapter<Recycle
                 }
 
                 h.layoutContent.setOnClickListener(v -> {
-                    if (MyApplication.imageExtensionSet.contains(data.fileExtension.toLowerCase())
-                            || videoExtensionSet.contains(data.fileExtension.toLowerCase())) {
+                    if (MyApplication.imageExtensionSet.contains(data.file_extension.toLowerCase())
+                            || videoExtensionSet.contains(data.file_extension.toLowerCase())) {
                         onFileView.accept(
                                 dataFile.getAbsolutePath()
                         );
