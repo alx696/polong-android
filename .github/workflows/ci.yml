@@ -60,17 +60,20 @@ jobs:
         run: |
           sudo apt-get install -y jq
           GIT_TAG=`echo $GITHUB_REF | sed 's/refs\/tags\///'`
-          upload_url=`curl \
+          # get upload url
+          API_UPLOAD_URL=`curl \
           -X POST \
-          -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
           https://api.github.com/repos/${GITHUB_REPOSITORY}/releases \
           -d '{"tag_name":"'${GIT_TAG}'"}' \
           | jq --raw-output '.upload_url' \
           | sed 's/{?name,label}/?name/'`
+          # upload
           curl \
           -X POST \
-          -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
-          -F 'file=@app/build/outputs/apk/release/android.apk' \
-          ${upload_url}=android.apk
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          -H "Content-Type: application/octet-stream" \
+          --data-binary @'app/build/outputs/apk/release/android.apk' \
+          ${API_UPLOAD_URL}=android.apk
