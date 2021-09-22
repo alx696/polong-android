@@ -85,8 +85,7 @@ public class ActivityQrCode extends AppCompatActivity implements ImageAnalyzerQr
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build();
 
-//        Size size = new Size(b.preview.getWidth(), b.preview.getHeight());
-        Size size = new Size(256, 256);
+        Size size = new Size(b.preview.getWidth(), b.preview.getHeight());
 
         Preview preview = new Preview.Builder()
                 .setTargetResolution(size)
