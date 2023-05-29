@@ -31,9 +31,9 @@ jobs:
       - name: prepare-resource
         run: |
           echo "恢复密钥"
-          echo "${{ secrets.ANDROID_JKS_GPG }}" | tee android/app/lilu.red.jks.asc
-          gpg -d --passphrase "${{ secrets.ANDROID_JKS_GPG_PASSWORD }}" --batch android/app/lilu.red.jks.asc > android/app/lilu.red.jks
-          sha256sum android/app/lilu.red.jks
+          echo "${{ secrets.ANDROID_JKS_GPG }}" | tee app/lilu.red.jks.asc
+          gpg -d --passphrase "${{ secrets.ANDROID_JKS_GPG_PASSWORD }}" --batch app/lilu.red.jks.asc > app/lilu.red.jks
+          sha256sum app/lilu.red.jks
 
       - name: JDK
         uses: actions/setup-java@v3
