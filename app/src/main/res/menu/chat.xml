@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/clear"
+        android:icon="@drawable/ic_delete_sweep"
+        android:title="清空"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/info"
+        android:icon="@drawable/ic_perm_contact_calendar"
+        android:title="信息"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/remote_control"
+        android:title="远程控制"
+        app:showAsAction="ifRoom" />
+
+</menu>

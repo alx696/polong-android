@@ -1,0 +1,19 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    id 'com.android.application' version '8.0.1' apply false
+    id 'com.android.library' version '8.0.1' apply false
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+allprojects {
+    configurations.all {
+        // https://docs.gradle.org/current/userguide/dynamic_versions.html
+        // 依存关系的版本末尾使用了 + 这种符号
+        resolutionStrategy.cacheDynamicVersionsFor 24, 'hours'
+        // 依存关系的版本末尾使用了 -SNAPSHOT 这种关键后缀
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+}

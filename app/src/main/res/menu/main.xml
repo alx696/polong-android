@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/add"
+        android:icon="@drawable/ic_person_add"
+        android:title="添加"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/option"
+        android:icon="@drawable/ic_settings"
+        android:title="个人信息"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/info"
+        android:icon="@drawable/ic_info"
+        android:title="应用信息"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/exit"
+        android:icon="@drawable/ic_exit"
+        android:title="退出"
+        app:showAsAction="always" />
+
+</menu>

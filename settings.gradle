@@ -1,0 +1,58 @@
+pluginManagement {
+    repositories {
+        maven {
+            credentials {
+                username '5f866717fa82bfeb805e28d6'
+                password 'yFS0nOmyVI)5'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2045596-snapshot-L2iZ1M/'
+        }
+        maven {
+            url "https://maven.aliyun.com/repository/google"
+            content {
+                // this repository contains everything BUT artifacts with group starting with "my.company"
+                excludeGroupByRegex "com\\.google.*"
+            }
+        }
+        maven {
+            url "https://maven.aliyun.com/repository/public"
+            content {
+                // this repository contains everything BUT artifacts with group starting with "my.company"
+                excludeGroupByRegex "io\\.grpc.*"
+            }
+        }
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        maven {
+            credentials {
+                username '5f866717fa82bfeb805e28d6'
+                password 'yFS0nOmyVI)5'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2045596-snapshot-L2iZ1M/'
+        }
+        maven {
+            url "https://maven.aliyun.com/repository/google"
+            content {
+                // this repository contains everything BUT artifacts with group starting with "my.company"
+                excludeGroupByRegex "com\\.google.*"
+            }
+        }
+        maven {
+            url "https://maven.aliyun.com/repository/public"
+            content {
+                // this repository contains everything BUT artifacts with group starting with "my.company"
+                excludeGroupByRegex "io\\.grpc.*"
+            }
+        }
+        google()
+        mavenCentral()
+    }
+}
+
+include ':app', ':gomobile'

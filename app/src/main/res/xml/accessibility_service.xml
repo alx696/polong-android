@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+文档 https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#xml-attributes_1
+监测窗口：canRetrieveWindowContent，还应设置flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds
+监测输入：canRequestFilterKeyEvents，还应设置flagRequestFilterKeyEvents
+执行手势：canPerformGestures，启用才能执行dispatchGesture()
+触摸浏览：canRequestTouchExplorationMode，还应设置flagRequestTouchExplorationMode|flagServiceHandlesDoubleTap|flagRequestMultiFingerGestures
+已经废弃(26)：flagRequestEnhancedWebAccessibility
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAllMask"
+    android:accessibilityFeedbackType="feedbackAllMask"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds|flagRequestFilterKeyEvents|flagRequestTouchExplorationMode|flagServiceHandlesDoubleTap|flagRequestMultiFingerGestures"
+    android:canRequestEnhancedWebAccessibility="false"
+    android:canRequestFilterKeyEvents="false"
+    android:canRequestTouchExplorationMode="false"
+    android:canRetrieveWindowContent="true"
+    android:canPerformGestures="true"
+    android:canTakeScreenshot="false"
+    android:notificationTimeout="100" />

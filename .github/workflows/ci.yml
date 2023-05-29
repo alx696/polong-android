@@ -1,0 +1,62 @@
+# 需要配置 Repository secrets , JKS密钥在Github中的配置参考 https://github.com/alx696/share/wiki/Git#android%E5%AF%86%E9%92%A5%E5%9C%A8action%E4%B8%AD%E7%9A%84%E4%BD%BF%E7%94%A8
+# ANDROID_JKS_GPG : 密钥的密文
+# ANDROID_JKS_GPG_PASSWORD : 密文的密码
+# ANDROID_JKS_KEY_PASSWORD : 密钥的 keyPassword
+# ANDROID_JKS_STORE_PASSWORD : 密钥的 storePassword
+
+name: Action
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Resource
+        uses: robinraju/release-downloader@v1.7
+        with:
+          repository: "alx696/polong-core"
+          tag: "v1.0.0"
+          fileName: "polong-core.aar"
+          out-file-path: "gomobile"
+          # 私有库必须设置访问凭证( https://github.com/settings/tokens 中生成,  settings/secrets/actions 中配置)
+#          token: ${{ secrets.CONTENT_DOWNLOAD_TOKEN }}
+
+      - name: prepare-resource
+        run: |
+          echo "恢复密钥"
+          echo "${{ secrets.ANDROID_JKS_GPG }}" | tee android/app/lilu.red.jks.asc
+          gpg -d --passphrase "${{ secrets.ANDROID_JKS_GPG_PASSWORD }}" --batch android/app/lilu.red.jks.asc > android/app/lilu.red.jks
+          sha256sum android/app/lilu.red.jks
+
+      - name: JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: APK
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          ANDROID_JKS_KEY_PASSWORD: ${{ secrets.ANDROID_JKS_KEY_PASSWORD }}
+          ANDROID_JKS_STORE_PASSWORD: ${{ secrets.ANDROID_JKS_STORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+          ls app/build/outputs/apk/*/
+
+      # 注意: 发布附件的名称不能使用中文, 否则会被自动替换成default而产生无法找到文件的错误.
+      - name: Release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: app/build/outputs/apk/*/*.apk
+          file_glob: true
+          overwrite: true
+          body: "访问 https://lilu.red 探索更多有趣的技术."

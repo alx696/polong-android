@@ -1,0 +1,70 @@
+<resources>
+
+  <!-- 里路应用基础样式 -->
+  <style name="MyTheme.MaterialButton" parent="Widget.MaterialComponents.Button">
+    <!--    <item name="backgroundTint">#8bc34a</item>-->
+  </style>
+
+  <style name="MyTheme.OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+    <!--    <item name="android:textColor">#8bc34a</item>-->
+    <!--  边框色  -->
+    <!--    <item name="strokeColor">#8bc34a</item>-->
+    <!--  边框粗细  -->
+    <!--    <item name="strokeWidth">3dp</item>-->
+  </style>
+
+  <style name="MyTheme.TextButton" parent="Widget.MaterialComponents.Button.TextButton">
+    <!--    <item name="android:textColor">#8bc34a</item>-->
+  </style>
+
+  <!-- 工具栏菜单样式 -->
+  <style name="MyTheme.Toolbar.Menu" parent="">
+    <!--  文字色  -->
+    <item name="android:textColorPrimary">?attr/colorOnPrimary</item>
+    <!--  图标色(矢量xml需要设置 android:tint="?attr/colorControlNormal" )  -->
+    <item name="colorControlNormal">?attr/colorOnPrimary</item>
+    <!--  菜单背景  -->
+    <item name="colorSurface">?attr/colorPrimaryDark</item>
+  </style>
+  <!-- 工具栏样式 -->
+  <style name="MyTheme.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+    <!--  标题色  -->
+    <!--    <item name="titleTextColor">#8bc34a</item>-->
+    <!-- 菜单样式 -->
+    <item name="android:theme">@style/MyTheme.Toolbar.Menu</item>
+  </style>
+
+  <!-- 基础样式 -->
+  <style name="MyTheme.Base" parent="">
+    <!--  按钮有背景色时为背景色,否则为文字色;滚动时到边波纹色  -->
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <!--  按钮有背景色时为文字色  -->
+    <item name="colorOnPrimary">@color/colorOnPrimary</item>
+    <!--  文本中链接颜色  -->
+    <item name="colorAccent">@color/colorAccent</item>
+    <!--  按钮样式  -->
+    <item name="materialButtonStyle">@style/MyTheme.MaterialButton</item>
+  </style>
+
+  <!-- 标准Activity -->
+  <style name="MyTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <item name="android:theme">@style/MyTheme.Base</item>
+    <!--  任务栏背景色(放到MyTheme.Base无效?!)  -->
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <!-- 动作栏遮盖应用栏 -->
+    <item name="windowActionModeOverlay">true</item>
+    <!-- 动作栏背景颜色 -->
+    <item name="actionModeBackground">@color/colorPrimary</item>
+    <!-- 动作栏关闭图标 -->
+    <item name="actionModeCloseDrawable">@drawable/ic_close</item>
+  </style>
+
+  <!-- 弹窗Activity -->
+  <style name="MyTheme.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+    <item name="android:theme">@style/MyTheme.Base</item>
+    <!-- 去除标题 -->
+    <item name="windowNoTitle">true</item>
+  </style>
+  <!-- 里路应用基础样式 -->
+
+</resources>

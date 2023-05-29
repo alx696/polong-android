@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option java_package = "red.lilu.app.data_store";
+option java_multiple_files = true;
+
+message Pref {
+  string website = 1;
+  int32 version_code = 2;
+  string apk = 3;
+  bool remote_control_enable = 10; // 远程控制开启
+}
