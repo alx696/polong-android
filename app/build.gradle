@@ -32,8 +32,8 @@ android {
         applicationId "red.lilu.app.polong"
         minSdk 24
         targetSdk 33
-        versionCode 100
-        versionName "1.0.0"
+        versionCode 10
+        versionName "1.0"
     }
 
     signingConfigs {
