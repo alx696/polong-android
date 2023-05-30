@@ -7,3 +7,4 @@ app/build
 gomobile/build
 gomobile/*.aar
 gomobile/*.jar
+/app/lilu.red.jks

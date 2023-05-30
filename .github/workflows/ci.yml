@@ -28,7 +28,7 @@ jobs:
           # 私有库必须设置访问凭证( https://github.com/settings/tokens 中生成,  settings/secrets/actions 中配置)
 #          token: ${{ secrets.CONTENT_DOWNLOAD_TOKEN }}
 
-      - name: prepare-resource
+      - name: JKS
         run: |
           echo "恢复密钥"
           echo "${{ secrets.ANDROID_JKS_GPG }}" | tee app/lilu.red.jks.asc
@@ -52,6 +52,7 @@ jobs:
           ls app/build/outputs/apk/*/
 
       # 注意: 发布附件的名称不能使用中文, 否则会被自动替换成default而产生无法找到文件的错误.
+      #       需要在 /settings/actions 中将 Workflow permissions 设为 Read and write permissions.
       - name: Release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: svenstaro/upload-release-action@v2
