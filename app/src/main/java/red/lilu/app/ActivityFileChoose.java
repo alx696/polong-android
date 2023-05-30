@@ -348,10 +348,7 @@ public class ActivityFileChoose extends AppCompatActivity {
     }
 
     private void init() {
-        Log.i(T, "初始化逻辑");
-
-        File externalStorageDirectory = Environment.getExternalStorageDirectory();
-        updatePath(externalStorageDirectory.getAbsolutePath(), "存储");
+        updatePath(Environment.getExternalStorageDirectory().getPath(), "存储");
     }
 
     private void updatePath(String path, String name) {
@@ -392,17 +389,17 @@ public class ActivityFileChoose extends AppCompatActivity {
                 );
             });
         }
-        b.scrollPath.postDelayed(() -> {
-            b.scrollPath.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
-        }, 300L);
+        b.scrollPath.postDelayed(() -> b.scrollPath.fullScroll(HorizontalScrollView.FOCUS_RIGHT), 300L);
 
         showPath(path);
     }
 
     private void showPath(String path) {
-        dir = new File(path);
-        File[] files = dir.listFiles();
+        Log.d(T, String.format("显示路径 %s", path));
+        // 当前目录
+        File[] files = new File(path).listFiles();
         if (files == null) {
+            Log.w(T, String.format("路径 %s 没有文件", path));
             return;
         }
 
